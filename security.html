@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security - Gate Pass Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen p-6 flex flex-col items-center justify-center">
+
+    <div class="max-w-md w-full bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+        <h1 class="text-2xl font-bold text-center mb-4 text-green-400">🛡️ Security Gate Pass Scanner</h1>
+        
+        <!-- Scanner Box -->
+        <div id="reader" class="rounded-lg overflow-hidden border-2 border-gray-600 bg-gray-900 mb-4"></div>
+
+        <!-- Result Card -->
+        <div id="result-card" class="hidden p-4 rounded-lg border mt-4">
+            <h2 id="res-status" class="text-xl font-bold text-center mb-3"></h2>
+            
+            <div id="res-details" class="text-sm space-y-2 text-gray-200"></div>
+
+            <button onclick="resumeScanning()" class="w-full mt-5 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">Scan Next Pass</button>
+        </div>
+    </div>
+
+    <script>
+        let html5QrcodeScanner;
+        let isProcessing = false; // Stops rapid double-scanning
+
+        async function onScanSuccess(decodedText) {
+            if (isProcessing) return; 
+            isProcessing = true;
+
+            // Pause camera stream immediately
+            html5QrcodeScanner.pause();
+
+            try {
+                const res = await fetch('/api/security/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passData: decodedText })
+                });
+
+                const data = await res.json();
+                const card = document.getElementById('result-card');
+                const statusHeader = document.getElementById('res-status');
+                const detailsDiv = document.getElementById('res-details');
+
+                card.classList.remove('hidden');
+
+                if (data.success) {
+                    card.className = "p-4 rounded-lg border border-green-500 bg-green-950/60 text-green-100 mt-4";
+                    statusHeader.className = "text-xl font-extrabold text-center text-green-400 mb-3";
+                    statusHeader.innerText = "✅ PERMITTED TO GO OUT!";
+
+                    const ext = data.exitDetails;
+                    
+                    detailsDiv.innerHTML = `
+                        <div class="border-b border-green-800/80 pb-2 mb-2 text-center">
+                            <p class="text-xl font-extrabold text-white">${ext.studentName}</p>
+                            <p class="text-green-300 font-semibold">Roll No: ${ext.rollNo}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs md:text-sm">
+                            <p><strong>Department:</strong> ${ext.dept || 'N/A'}</p>
+                            <p><strong>Year / Sec:</strong> ${ext.year ? ext.year + ' - ' + ext.section : 'N/A'}</p>
+                            <p><strong>Mobile:</strong> ${ext.mobile || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${ext.email || 'N/A'}</p>
+                        </div>
+                        <div class="mt-2 pt-2 border-t border-green-800/80 text-xs md:text-sm">
+                            <p><strong>Reason:</strong> ${ext.reason || 'N/A'}</p>
+                            <p class="text-yellow-300 font-bold mt-2 text-center text-base">🕒 Exit Time: ${ext.exitTime}</p>
+                        </div>
+                    `;
+                } else {
+                    card.className = "p-4 rounded-lg text-center border border-red-500 bg-red-950/60 text-red-200 mt-4";
+                    statusHeader.className = "text-xl font-bold text-center text-red-400 mb-2";
+                    statusHeader.innerText = "❌ SCAN FAILED";
+                    detailsDiv.innerHTML = `<p class="font-bold text-center text-red-300 text-lg">${data.message}</p>`;
+                }
+            } catch (err) {
+                alert("Error verifying gate pass with server.");
+            }
+        }
+
+        function resumeScanning() {
+            document.getElementById('result-card').classList.add('hidden');
+            isProcessing = false;
+            html5QrcodeScanner.resume();
+        }
+
+        // Initialize QR Scanner
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } });
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>

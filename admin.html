@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Admin - Pass Approver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF Libraries for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen p-6">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md border mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">🏫 Office Admin Approval</h1>
+        <form id="approve-form" class="space-y-3">
+            <div>
+                <label class="block text-sm font-semibold text-gray-600">Enter Student Roll Number</label>
+                <input type="text" id="a-roll" placeholder="e.g. 107" class="w-full border p-2 rounded" required>
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">Approve Gate Pass (20 Mins)</button>
+        </form>
+    </div>
+
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-md border">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Live Pass Activity</h2>
+            <button onclick="downloadPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 flex items-center gap-2">
+                📄 Download Complete PDF Report
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-200 text-center text-xs md:text-sm">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="p-2 border">Roll No</th>
+                        <th class="p-2 border">Name</th>
+                        <th class="p-2 border">Dept</th>
+                        <th class="p-2 border">Year/Sec</th>
+                        <th class="p-2 border">Mobile</th>
+                        <th class="p-2 border">Email</th>
+                        <th class="p-2 border">Status</th>
+                        <th class="p-2 border">Approval Time</th>
+                        <th class="p-2 border">Exit Time</th>
+                        <th class="p-2 border">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table">
+                    <tr><td colspan="10" class="p-4 text-gray-500">No active passes.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('approve-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const rollNo = document.getElementById('a-roll').value;
+            const res = await fetch('/api/admin/approve', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ rollNo })
+            });
+            const data = await res.json();
+            alert(data.message);
+            fetchPasses();
+        };
+
+        async function fetchPasses() {
+            const res = await fetch('/api/admin/passes');
+            const data = await res.json();
+            const tbody = document.getElementById('admin-table');
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="p-4 text-gray-500">No active passes.</td></tr>';
+                return;
+            }
+
+            data.forEach(pass => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2 border font-bold">${pass.rollNo}</td>
+                        <td class="p-2 border">${pass.studentName}</td>
+                        <td class="p-2 border">${pass.dept}</td>
+                        <td class="p-2 border">${pass.year} - ${pass.section}</td>
+                        <td class="p-2 border">${pass.mobile}</td>
+                        <td class="p-2 border">${pass.email}</td>
+                        <td class="p-2 border font-bold ${
+                            pass.status === 'APPROVED' ? 'text-green-600' :
+                            pass.status === 'EXITED' ? 'text-blue-600' : 'text-red-600'
+                        }">${pass.status}</td>
+                        <td class="p-2 border">${pass.approvedTime}</td>
+                        <td class="p-2 border font-semibold text-gray-700">${pass.exitTime || 'Not Exited Yet'}</td>
+                        <td class="p-2 border">
+                            <button onclick="deletePass('${pass.rollNo}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-600">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function deletePass(rollNo) {
+            if (!confirm(`Are you sure you want to delete pass for Roll No: ${rollNo}?`)) return;
+            const res = await fetch(`/api/admin/delete-pass/${rollNo}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            fetchPasses();
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape'); // Landscape format to fit all columns nicely
+            doc.text("College Student Gate Pass Full Activity Report", 14, 15);
+            doc.autoTable({ 
+                html: 'table', 
+                ignoreColumns: [9], // Skips Delete action column
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+            doc.save("Gate_Pass_Full_Student_Report.pdf");
+        }
+
+        fetchPasses();
+        setInterval(fetchPasses, 4000);
+    </script>
+</body>\
+
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student - Gate Pass Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen p-6">
+
+    <!-- Profile Registration (Expandable) -->
+    <details class="max-w-md mx-auto bg-white p-4 rounded-xl shadow-md border mb-6">
+        <summary class="font-bold text-gray-700 cursor-pointer">▶ Register Profile (First Time)</summary>
+        <form id="register-form" class="space-y-3 mt-4">
+            <input type="text" id="s-roll" placeholder="Roll Number" class="w-full border p-2 rounded text-sm" required>
+            <input type="text" id="s-name" placeholder="Full Name" class="w-full border p-2 rounded text-sm" required>
+            <input type="email" id="s-email" placeholder="Gmail Address" class="w-full border p-2 rounded text-sm" required>
+            <input type="tel" id="s-mobile" placeholder="Mobile Number" class="w-full border p-2 rounded text-sm" required>
+            <input type="text" id="s-dept" placeholder="Department (e.g. CSE)" class="w-full border p-2 rounded text-sm" required>
+            <div class="flex gap-2">
+                <input type="text" id="s-year" placeholder="Year (e.g. 3rd)" class="w-1/2 border p-2 rounded text-sm" required>
+                <input type="text" id="s-section" placeholder="Section (e.g. A)" class="w-1/2 border p-2 rounded text-sm" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 text-sm">Save Profile</button>
+        </form>
+    </details>
+
+    <!-- Pass Generator Box -->
+    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-md border">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">🎫DIGITAL GATE PASS GENERATOR </h1>
+        
+        <form id="pass-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-600">Roll Number</label>
+                <input type="text" id="gen-roll" placeholder="e.g. 107" class="w-full border p-2 rounded" required>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-600">Reason for Exit</label>
+                <input type="text" id="gen-reason" placeholder="e.g. Going home" class="w-full border p-2 rounded" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition">Generate QR Pass</button>
+        </form>
+
+        <!-- Approval Status & QR Output Box -->
+        <div id="pass-output" class="hidden mt-6 text-center border-t pt-4">
+            <!-- Approval Banner -->
+            <div id="status-banner" class="bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded-lg mb-4 text-sm font-bold">
+                ✅ PASS APPROVED BY OFFICE ADMIN!
+            </div>
+
+            <!-- QR Container -->
+            <div id="qr-container">
+                <h2 class="text-lg font-bold text-gray-800">Your QR Gate Pass</h2>
+                <div id="qrcode" class="flex justify-center my-4"></div>
+                <p id="expiry-text" class="text-xs text-red-600 font-semibold"></p>
+                <p class="text-xs text-gray-500 mt-2">Show this QR code at the main security gate.</p>
+            </div>
+
+            <!-- Exited Badge (Hidden until scanned by security) -->
+            <div id="exited-container" class="hidden p-4 bg-blue-50 border border-blue-400 rounded-lg text-blue-900 mt-2">
+                <h3 class="text-xl font-extrabold text-green-600 mb-1">🎉 PERMITTED TO GO OUT!</h3>
+                <p class="text-sm font-semibold">Your gate pass has been successfully scanned by security.</p>
+                <p id="exit-time-display" class="text-xs font-bold text-gray-700 mt-2 bg-white p-2 rounded border"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let checkPassInterval = null;
+
+        // Profile Registration
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const studentData = {
+                rollNo: document.getElementById('s-roll').value,
+                name: document.getElementById('s-name').value,
+                email: document.getElementById('s-email').value,
+                mobile: document.getElementById('s-mobile').value,
+                dept: document.getElementById('s-dept').value,
+                year: document.getElementById('s-year').value,
+                section: document.getElementById('s-section').value
+            };
+
+            const res = await fetch('/api/register-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentData)
+            });
+            const data = await res.json();
+            alert(data.message);
+        };
+
+        // QR Generation
+        document.getElementById('pass-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const rollNo = document.getElementById('gen-roll').value;
+            const reason = document.getElementById('gen-reason').value;
+
+            const res = await fetch('/api/student/generate-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rollNo, reason })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById('pass-output').classList.remove('hidden');
+                document.getElementById('qr-container').classList.remove('hidden');
+                document.getElementById('exited-container').classList.add('hidden');
+                document.getElementById('qrcode').innerHTML = ""; // Clear existing QR
+                
+                new QRCode(document.getElementById("qrcode"), {
+                    text: JSON.stringify(data.pass),
+                    width: 200,
+                    height: 200
+                });
+
+                document.getElementById('expiry-text').innerText = `Valid until: ${data.pass.expiryTime}`;
+
+                // Start polling to check when security scans the QR pass
+                startStatusCheck(rollNo);
+            } else {
+                alert(data.message);
+            }
+        };
+
+        // Poll server every 2 seconds to detect Security scan
+        function startStatusCheck(rollNo) {
+            if (checkPassInterval) clearInterval(checkPassInterval);
+
+            checkPassInterval = setInterval(async () => {
+                const res = await fetch('/api/admin/passes');
+                const passes = await res.json();
+                const myPass = passes.find(p => p.rollNo === rollNo);
+
+                if (myPass && myPass.status === 'EXITED') {
+                    clearInterval(checkPassInterval); // Stop polling
+
+                    // Hide the QR Code so it cannot be scanned again
+                    document.getElementById('qr-container').classList.add('hidden');
+                    document.getElementById('status-banner').className = "bg-blue-100 border border-blue-400 text-blue-800 px-4 py-2 rounded-lg mb-4 text-sm font-bold";
+                    document.getElementById('status-banner').innerText = "✅ PASS USED & VERIFIED AT GATE";
+
+                    // Show Exit Notification
+                    document.getElementById('exited-container').classList.remove('hidden');
+                    document.getElementById('exit-time-display').innerText = `🕒 Exit Recorded Time: ${myPass.exitTime}`;
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
