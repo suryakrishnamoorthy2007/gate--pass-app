@@ -3,112 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Portal - College Gate Pass</title>
+    <title>Office Admin - Gate Pass Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+<body class="bg-slate-100 min-h-screen text-slate-800">
 
-    <header class="bg-indigo-900 text-white p-4 shadow-md flex justify-between items-center px-6">
-        <div class="flex items-center space-x-3">
-            <i class="fa-solid fa-id-card-clip text-2xl text-indigo-400"></i>
-            <h1 class="text-xl font-bold tracking-wide">College Gate Pass Portal</h1>
-        </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="clearAllPasses()" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1.5 rounded-lg shadow font-medium">
-                <i class="fa-solid fa-trash-can mr-1"></i> Clear All Data
-            </button>
-            <button onclick="loadPasses()" class="bg-indigo-700 hover:bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg shadow font-medium">
-                <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh Table
-            </button>
-        </div>
-    </header>
+    <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full mb-3 text-2xl font-bold">
+                    🔒
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Admin Portal</h2>
+                <p class="text-xs text-slate-500 mt-1">Please authenticate to manage gate passes</p>
+            </div>
 
-    <div class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <div class="lg:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-                <i class="fa-solid fa-user-plus text-indigo-600 mr-2"></i> Issue New Pass
-            </h2>
-            <form onsubmit="handleIssuePass(event)" class="space-y-3">
+            <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase">Roll Number</label>
-                    <input type="text" id="rollNo" required placeholder="e.g. 110324104107" class="w-full mt-1 p-2 border rounded-lg text-sm uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
+                    <input type="text" id="adminUser" required placeholder="admin" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase">Student Name</label>
-                    <input type="text" id="name" required placeholder="e.g. Surya K" class="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+                    <input type="password" id="adminPass" required placeholder="••••••••" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 uppercase">Dept</label>
-                        <select id="dept" class="w-full mt-1 p-2 border rounded-lg text-sm outline-none">
-                            <option value="CSE">CSE</option>
-                            <option value="ECE">ECE</option>
-                            <option value="MECH">MECH</option>
-                            <option value="CIVIL">CIVIL</option>
-                            <option value="IT">IT</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 uppercase">Year</label>
-                        <select id="year" class="w-full mt-1 p-2 border rounded-lg text-sm outline-none">
-                            <option value="I">I</option>
-                            <option value="II">II</option>
-                            <option value="III" selected>III</option>
-                            <option value="IV">IV</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 uppercase">Sec</label>
-                        <select id="section" class="w-full mt-1 p-2 border rounded-lg text-sm outline-none">
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase">Destination / Address</label>
-                    <input type="text" id="address" placeholder="e.g. Anna Nagar, Chennai" value="Anna Nagar, Chennai" class="w-full mt-1 p-2 border rounded-lg text-sm outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase">Reason</label>
-                    <input type="text" id="reason" placeholder="e.g. Home Visit / Project" value="Home Visit" class="w-full mt-1 p-2 border rounded-lg text-sm outline-none">
-                </div>
-                <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow">
-                    Approve Pass
+                <div id="loginError" class="hidden text-xs text-red-600 font-medium text-center"></div>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition">
+                    Unlock Dashboard
                 </button>
             </form>
         </div>
+    </div>
 
-        <div class="lg:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b">
-                <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                    <i class="fa-solid fa-list-check text-indigo-600 mr-2"></i> Live Pass Logs (IST)
-                </h2>
-                <span id="passCount" class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2.5 py-1 rounded-full">0 Records</span>
+    <div id="uploadModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 text-center">
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                📥
+            </div>
+            <h2 class="text-lg font-bold text-slate-800 mb-1">Upload Student Excel Sheet</h2>
+            <p class="text-xs text-slate-500 mb-4">Please upload your <b>.xlsx</b> or <b>.csv</b> file containing student details (RollNo, Name, Dept, Address, Mobile).</p>
+
+            <div class="border-2 border-dashed border-indigo-200 rounded-xl p-4 bg-indigo-50/50 mb-4">
+                <input type="file" id="modalFileInput" accept=".xlsx, .xls, .csv" class="w-full text-xs file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700">
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="w-1/2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition">
+                    Later
+                </button>
+                <button onclick="uploadModalExcel()" class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition shadow">
+                    Upload & Sync
+                </button>
+            </div>
+            <div id="uploadStatusMsg" class="hidden mt-3 text-xs font-semibold"></div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+
+        <header class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">🏛️ College Gate Pass Administration</h1>
+                <p class="text-xs text-slate-500"> • 20-Minute Expiry Engine</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="inline-flex items-center gap-1 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition">
+                    📥 Upload Student Excel
+                </button>
+                <button onclick="downloadPDF()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow transition">
+                    📄 Download Passes PDF
+                </button>
+                <button onclick="handleLogout()" class="px-3.5 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-300 rounded-lg text-xs font-semibold transition">
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-lg mx-auto">
+            <h2 class="text-base font-bold text-slate-800 mb-1">🎫 Issue / Approve Student Gate Pass</h2>
+            <p class="text-xs text-slate-500 mb-4">Enter Student Roll / Barcode Number (Details will auto-fetch from uploaded Excel)</p>
+
+            <form id="approvalForm" onsubmit="approvePass(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Roll / ID Number</label>
+                    <input type="text" id="rollNoInput" required placeholder="e.g. 110324104107" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm transition shadow">
+                    Approve Gate Pass (20 Mins)
+                </button>
+            </form>
+            <div id="statusMessage" class="hidden mt-3 p-2.5 rounded-lg text-xs font-medium text-center"></div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">📊 Student Records & Gate Pass Logs</h3>
+                    <p class="text-xs text-slate-500">Live activity showing student details </p>
+                </div>
+                <button onclick="loadPasses()" class="text-xs font-semibold text-indigo-600 hover:underline">🔄 Refresh Table</button>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
+                <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs border-b">
-                            <th class="py-3 px-3">Roll No</th>
-                            <th class="py-3 px-3">Student Name</th>
-                            <th class="py-3 px-2">Dept</th>
-                            <th class="py-3 px-2">Year</th>
-                            <th class="py-3 px-2">Sec</th>
-                            <th class="py-3 px-3">Status</th>
-                            <th class="py-3 px-3">Approved (IST)</th>
-                            <th class="py-3 px-3">Valid Until</th>
-                            <th class="py-3 px-3">Exited (IST)</th>
-                            <th class="py-3 px-2 text-center">Action</th>
+                        <tr class="bg-slate-800 text-white uppercase text-[11px]">
+                            <th class="p-3">Roll No</th>
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Dept</th>
+                            <th class="p-3">Mobile</th>
+                            <th class="p-3">Address</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Approved At</th>
+                            <th class="p-3">Valid Until</th>
+                            <th class="p-3">Exited At</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="divide-y divide-gray-100">
+                    <tbody id="passesTableBody" class="divide-y divide-slate-100">
                         <tr>
-                            <td colspan="10" class="py-6 text-center text-gray-400">Loading student records...</td>
+                            <td colspan="9" class="p-4 text-center text-slate-400">Loading student records...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -118,92 +133,229 @@
     </div>
 
     <script>
+        let allPassesData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('adminToken')) {
+                document.getElementById('loginModal').classList.add('hidden');
+                checkStudentDatabase();
+                loadPasses();
+            }
+        });
+
+        // 1. Check if students exist; if 0, automatically show the Upload Modal!
+        async function checkStudentDatabase() {
+            try {
+                const res = await fetch('/api/students/count');
+                const data = await res.json();
+                if (data.count === 0) {
+                    document.getElementById('uploadModal').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Could not check student count", e);
+            }
+        }
+
+        // Admin Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUser').value.trim();
+            const password = document.getElementById('adminPass').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    sessionStorage.setItem('adminToken', data.token);
+                    document.getElementById('loginModal').classList.add('hidden');
+                    checkStudentDatabase();
+                    loadPasses();
+                } else {
+                    errorDiv.textContent = data.message || "Invalid credentials";
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorDiv.textContent = "Server connection error";
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('adminToken');
+            location.reload();
+        }
+
+        // Upload Excel from Modal
+        async function uploadModalExcel() {
+            const fileInput = document.getElementById('modalFileInput');
+            const statusMsg = document.getElementById('uploadStatusMsg');
+
+            if (!fileInput.files[0]) {
+                alert("Please select your students.xlsx file first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                statusMsg.className = "mt-3 text-xs text-indigo-600 font-semibold block";
+                statusMsg.textContent = "Uploading and syncing students...";
+
+                const res = await fetch('/api/upload-students', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (data.success) {
+                    statusMsg.className = "mt-3 text-xs text-emerald-600 font-semibold block";
+                    statusMsg.textContent = `✅ ${data.message}`;
+                    setTimeout(() => {
+                        document.getElementById('uploadModal').classList.add('hidden');
+                    }, 1500);
+                } else {
+                    statusMsg.className = "mt-3 text-xs text-red-600 font-semibold block";
+                    statusMsg.textContent = `❌ ${data.message}`;
+                }
+            } catch (err) {
+                statusMsg.className = "mt-3 text-xs text-red-600 font-semibold block";
+                statusMsg.textContent = "Upload failed: " + err.message;
+            }
+        }
+
+        // Approve Gate Pass
+        async function approvePass(e) {
+            e.preventDefault();
+            const rollNo = document.getElementById('rollNoInput').value.trim();
+            const statusDiv = document.getElementById('statusMessage');
+
+            try {
+                const res = await fetch('/api/approve-pass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rollNo })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-emerald-100 text-emerald-800";
+                    statusDiv.textContent = `✅ Pass approved for ${data.pass.name} (${rollNo}) - Valid for 20 mins`;
+                    statusDiv.classList.remove('hidden');
+                    document.getElementById('rollNoInput').value = '';
+                    loadPasses();
+                } else {
+                    statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-red-100 text-red-800";
+                    statusDiv.textContent = data.message || "Approval failed";
+                    statusDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-red-100 text-red-800";
+                statusDiv.textContent = "Network error";
+                statusDiv.classList.remove('hidden');
+            }
+        }
+
+        // Load Passes Table
         async function loadPasses() {
             try {
                 const res = await fetch('/api/passes');
-                const data = await res.json();
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '';
-
-                if (data.success && data.data.length > 0) {
-                    document.getElementById('passCount').innerText = `${data.data.length} Passes`;
-                    data.data.forEach(pass => {
-                        const statusBadge = pass.status === 'Exited' 
-                            ? '<span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md"><i class="fa-solid fa-check mr-1"></i>Exited</span>'
-                            : '<span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-md"><i class="fa-solid fa-clock mr-1"></i>Approved</span>';
-
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="py-3 px-3 font-bold text-indigo-950">${pass.rollNo}</td>
-                                <td class="py-3 px-3 font-medium text-gray-800">${pass.name}</td>
-                                <td class="py-3 px-2 text-gray-600">${pass.dept || '-'}</td>
-                                <td class="py-3 px-2 text-gray-700 font-semibold">${pass.year || '-'}</td>
-                                <td class="py-3 px-2 text-gray-700 font-semibold">${pass.section || '-'}</td>
-                                <td class="py-3 px-3">${statusBadge}</td>
-                                <td class="py-3 px-3 text-xs text-gray-600">${pass.approvedAt || '-'}</td>
-                                <td class="py-3 px-3 text-xs text-gray-500">${pass.validUntil || '-'}</td>
-                                <td class="py-3 px-3 text-xs font-semibold text-green-700">${pass.exitTime || '-'}</td>
-                                <td class="py-3 px-2 text-center">
-                                    <button onclick="deletePass('${pass._id}')" class="text-gray-400 hover:text-red-600 transition p-1" title="Delete pass">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    document.getElementById('passCount').innerText = `0 Passes`;
-                    tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-gray-400">No pass records created yet.</td></tr>`;
+                allPassesData = await res.json();
+                const tbody = document.getElementById('passesTableBody');
+                
+                if (!allPassesData || allPassesData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">No pass records found in database</td></tr>`;
+                    return;
                 }
+
+                const now = new Date().getTime();
+
+                tbody.innerHTML = allPassesData.map(p => {
+                    const expireTime = p.expiresAt ? new Date(p.expiresAt).getTime() : 0;
+                    const diffMinutes = Math.max(0, Math.ceil((expireTime - now) / 60000));
+                    const expiryFormatted = p.expiresAt ? new Date(p.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+
+                    let statusBadge = "";
+                    if (p.status === 'Exited') {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">✅ Exited</span>`;
+                    } else if (p.status === 'Expired' || (expireTime > 0 && now > expireTime)) {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700">❌ Expired</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 animate-pulse">⏳ ${diffMinutes}m left</span>`;
+                    }
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="p-3 font-semibold text-slate-800 font-mono">${p.rollNo}</td>
+                            <td class="p-3 font-medium text-slate-700">${p.name || 'Student'}</td>
+                            <td class="p-3 text-slate-600">${p.dept || 'CSE'}</td>
+                            <td class="p-3 text-slate-600 font-mono">${p.mobile || '-'}</td>
+                            <td class="p-3 text-slate-500 truncate max-w-[150px]" title="${p.address || ''}">${p.address || '-'}</td>
+                            <td class="p-3">${statusBadge}</td>
+                            <td class="p-3 text-slate-600 font-mono">${p.approvalTime || '-'}</td>
+                            <td class="p-3 text-amber-700 font-mono font-medium">${expiryFormatted}</td>
+                            <td class="p-3 text-slate-600 font-mono">${p.exitTime || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (err) {
-                console.error(err);
+                console.error("Failed to load activity", err);
             }
         }
 
-        async function handleIssuePass(e) {
-            e.preventDefault();
-            const payload = {
-                rollNo: document.getElementById('rollNo').value.trim(),
-                name: document.getElementById('name').value.trim(),
-                dept: document.getElementById('dept').value,
-                year: document.getElementById('year').value,
-                section: document.getElementById('section').value,
-                address: document.getElementById('address').value.trim(),
-                reason: document.getElementById('reason').value.trim()
-            };
+        // Download Passes PDF
+        function downloadPDF() {
+            if (!allPassesData || allPassesData.length === 0) {
+                alert("No student records available to download!");
+                return;
+            }
 
-            const res = await fetch('/api/pass/issue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'pt', 'a4');
+
+            doc.setFontSize(18);
+            doc.setTextColor(30, 41, 59);
+            doc.text("College Gate Pass Administration Report", 40, 40);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${allPassesData.length}`, 40, 58);
+
+            const headers = [["Roll No", "Name", "Dept", "Mobile", "Address", "Status", "Approved At", "Valid Until", "Exit Time"]];
+            const rows = allPassesData.map(p => [
+                p.rollNo || '-',
+                p.name || 'Student',
+                p.dept || 'CSE',
+                p.mobile || '-',
+                p.address || '-',
+                p.status || '-',
+                p.approvalTime || '-',
+                p.expiresAt ? new Date(p.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+                p.exitTime || '-'
+            ]);
+
+            doc.autoTable({
+                head: headers,
+                body: rows,
+                startY: 75,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 5 },
+                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                margin: { left: 40, right: 40 }
             });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('rollNo').value = '';
-                document.getElementById('name').value = '';
+
+            doc.save(`Gate_Pass_Report_${Date.now()}.pdf`);
+        }
+
+        setInterval(() => {
+            if (sessionStorage.getItem('adminToken')) {
                 loadPasses();
-            } else {
-                alert(data.message || 'Failed to issue pass.');
             }
-        }
-
-        async function deletePass(id) {
-            if (!confirm('Are you sure you want to delete this pass record?')) return;
-            const res = await fetch(`/api/pass/${id}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (data.success) loadPasses();
-        }
-
-        async function clearAllPasses() {
-            if (!confirm('WARNING: This will delete ALL passes in the database. Continue?')) return;
-            const res = await fetch('/api/passes/clear-all', { method: 'DELETE' });
-            const data = await res.json();
-            if (data.success) loadPasses();
-        }
-
-        // Auto load on start and refresh every 10 seconds
-        loadPasses();
-        setInterval(loadPasses, 10000);
+        }, 5000);
     </script>
 </body>
 </html>
