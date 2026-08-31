@@ -335,7 +335,7 @@
 
             doc.setFontSize(10);
             doc.setTextColor(100, 116, 139);
-            doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${allPassesData.length}`, 40, 58);
+          doc.text(`Generated on: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} | Total Records: ${allPassesData.length}`, 40, 58);
 
             const headers = [["Roll No", "Name", "Dept", "Year", "Sec", "Mobile", "Address", "Status", "Approved At", "Valid Until", "Exit Time"]];
             const rows = allPassesData.map(p => {
@@ -356,7 +356,7 @@
                     p.address || '-',
                     p.status || '-',
                     p.approvalTime || '-',
-                    p.expiresAt ? new Date(p.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+            p.expiresAt ? new Date(p.expiresAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-',
                     p.exitTime || '-'
                 ];
             });
