@@ -17,10 +17,13 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// --- IST TIME FORMATTER HELPER ---
+// --- IST DATE & TIME FORMATTER HELPER ---
 function getISTTimeString(date = new Date()) {
-  return date.toLocaleTimeString('en-IN', {
+  return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
