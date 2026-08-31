@@ -1,218 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Security Gate Scanner</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Ultra-Fast Lightweight ZXing Scanner Library -->
-  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Gate Security Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
-<body class="bg-slate-900 min-h-screen text-slate-100 font-sans p-4 flex flex-col items-center justify-center">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
 
-  <div class="max-w-md w-full bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-700 space-y-6">
-    
-    <!-- Header -->
-    <div class="text-center space-y-1">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full text-xl mb-1">
-        <i class="fa-solid fa-bolt-lightning text-emerald-400"></i>
-      </div>
-      <h1 class="text-xl font-bold text-white tracking-wide">Main Gate Instant Scanner</h1>
-      <p class="text-xs text-slate-400">High-speed real-time barcode / QR verification</p>
+    <div class="max-w-md w-full bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700 text-center">
+        
+        <div class="flex items-center justify-between mb-3">
+            <h1 class="text-lg font-bold text-emerald-400">⚡ Instant Gate Scanner</h1>
+            <span id="scanStatus" class="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30 font-mono">
+                Sensor Ready
+            </span>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">Place barcode across the red line (keep 15–25 cm distance)</p>
+
+        <div class="relative overflow-hidden rounded-xl bg-black border-2 border-emerald-500 mb-4 h-[240px] flex items-center justify-center">
+            <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            
+            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-red-500 pointer-events-none shadow-[0_0_12px_red]"></div>
+        </div>
+
+        <div id="scanResult" class="hidden p-4 rounded-xl font-bold text-xs mb-4 text-left shadow-lg"></div>
+
+        <div class="pt-3 border-t border-slate-700">
+            <form onsubmit="handleManualSubmit(event)" class="flex gap-2">
+                <input type="text" id="manualRoll" autofocus placeholder="Enter ID e.g. 110324104107" class="w-full p-2.5 rounded-lg bg-slate-700 border border-slate-600 text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold transition">Verify</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Video Camera Feed -->
-    <div class="relative overflow-hidden rounded-2xl bg-black border-2 border-slate-600 aspect-square flex items-center justify-center shadow-inner">
-      <video id="video" class="w-full h-full object-cover"></video>
-      <!-- Visual Target Box -->
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div class="w-56 h-56 border-2 border-dashed border-emerald-400/70 rounded-xl"></div>
-      </div>
-    </div>
+    <audio id="beepSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- Manual Entry Form -->
-    <form onsubmit="handleManualScan(event)" class="space-y-3">
-      <div class="flex gap-2">
-        <input 
-          type="text" 
-          id="manualRollInput" 
-          placeholder="Or enter Roll / Barcode manually" 
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono uppercase"
-        />
-        <button 
-          type="submit" 
-          class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow"
-        >
-          Verify
-        </button>
-      </div>
-    </form>
+    <script>
+        let isProcessing = false;
+        const video = document.getElementById('video');
+        const beep = document.getElementById('beepSound');
 
-    <!-- Scan Result Card -->
-    <div id="resultBox" class="hidden rounded-2xl p-5 border text-center space-y-3 transition-all duration-300">
-      <div id="statusIcon" class="text-3xl"></div>
-      <div>
-        <h3 id="statusTitle" class="text-base font-bold"></h3>
-        <p id="statusDesc" class="text-xs text-slate-300 mt-1"></p>
-      </div>
+        async function verifyPass(rollNumber) {
+            if (isProcessing || !rollNumber) return;
+            isProcessing = true; // Lock scanner to prevent duplicate calls
 
-      <!-- Student Details -->
-      <div id="studentDetails" class="hidden bg-slate-900/60 rounded-xl p-3 text-left text-xs space-y-1 border border-slate-700/50">
-        <div class="flex justify-between"><span class="text-slate-400">Student:</span> <span id="resName" class="font-semibold text-white"></span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Roll No:</span> <span id="resRoll" class="font-mono text-emerald-400 font-bold"></span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Department:</span> <span id="resDept" class="text-slate-200"></span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Exit Time:</span> <span id="resTime" class="font-mono text-emerald-400"></span></div>
-      </div>
+            try { beep.currentTime = 0; beep.play(); } catch(e) {}
 
-      <!-- Free Direct WhatsApp Parent Alert Button -->
-      <button 
-        id="whatsappBtn" 
-        onclick="triggerWhatsAppMessage()" 
-        class="hidden w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow flex items-center justify-center gap-2"
-      >
-        <i class="fa-brands fa-whatsapp text-lg"></i>
-        <span>Send WhatsApp Alert to Parent</span>
-      </button>
-    </div>
+            const cleanRoll = String(rollNumber).trim();
+            const resultBox = document.getElementById('scanResult');
 
-  </div>
+            resultBox.classList.remove('hidden');
+            resultBox.className = "p-4 rounded-xl font-bold text-xs mb-4 bg-yellow-600 text-white shadow-lg";
+            resultBox.innerHTML = `⚡ Verifying Roll No: <span class="font-mono">${cleanRoll}</span>...`;
 
-  <script>
-    let codeReader;
-    let activeExitData = null;
-    let isScanning = false;
+            try {
+                const res = await fetch('/api/scan-pass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rollNo: cleanRoll })
+                });
 
-    async function verifyPass(rollNo) {
-      if (!rollNo) return;
-      const cleanRoll = rollNo.trim();
+                const data = await res.json();
 
-      const resultBox = document.getElementById('resultBox');
-      const statusIcon = document.getElementById('statusIcon');
-      const statusTitle = document.getElementById('statusTitle');
-      const statusDesc = document.getElementById('statusDesc');
-      const studentDetails = document.getElementById('studentDetails');
-      const whatsappBtn = document.getElementById('whatsappBtn');
-
-      resultBox.classList.remove('hidden');
-
-      try {
-        const res = await fetch('/api/scan-pass', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rollNo: cleanRoll })
-        });
-
-        const data = await res.json();
-
-        if (data.success && data.pass) {
-          const pass = data.pass;
-          activeExitData = pass;
-
-          resultBox.className = "rounded-2xl p-5 border text-center space-y-3 bg-emerald-950/40 border-emerald-500/40 text-emerald-200";
-          statusIcon.innerHTML = "✅";
-          statusTitle.textContent = "GATE EXIT APPROVED";
-          statusDesc.textContent = "Pass status updated to Exited.";
-
-          document.getElementById('resName').textContent = pass.name;
-          document.getElementById('resRoll').textContent = pass.rollNo;
-          document.getElementById('resDept').textContent = `${pass.dept || 'Engineering'} (${pass.year || ''} - ${pass.sec || ''})`;
-          document.getElementById('resTime').textContent = pass.exitTime;
-
-          studentDetails.classList.remove('hidden');
-          whatsappBtn.classList.remove('hidden');
-        } else {
-          activeExitData = null;
-          resultBox.className = "rounded-2xl p-5 border text-center space-y-3 bg-red-950/40 border-red-500/40 text-red-200";
-          statusIcon.innerHTML = "❌";
-          statusTitle.textContent = "EXIT DENIED";
-          statusDesc.textContent = data.message || "No active approved pass found.";
-          
-          studentDetails.classList.add('hidden');
-          whatsappBtn.classList.add('hidden');
-        }
-      } catch (err) {
-        resultBox.className = "rounded-2xl p-5 border text-center space-y-3 bg-amber-950/40 border-amber-500/40 text-amber-200";
-        statusIcon.innerHTML = "⚠️";
-        statusTitle.textContent = "SERVER ERROR";
-        statusDesc.textContent = "Could not connect to database.";
-        studentDetails.classList.add('hidden');
-        whatsappBtn.classList.add('hidden');
-      }
-
-      // Resume scanning after 2 seconds
-      setTimeout(() => { isScanning = false; }, 2000);
-    }
-
-    function triggerWhatsAppMessage() {
-      if (!activeExitData) return;
-
-      const parentPhone = activeExitData.parentContact || activeExitData.mobile || '';
-      const cleanPhone = parentPhone.replace(/[^0-9]/g, '');
-
-      if (!cleanPhone || cleanPhone.length < 10) {
-        alert("No parent phone number found for this student.");
-        return;
-      }
-
-      const messageText = 
-`🚨 *CAMPUS GATE EXIT NOTIFICATION*
-
-Dear Parent / Guardian,
-Your ward *${activeExitData.name}* (Roll No: *${activeExitData.rollNo}*, ${activeExitData.dept || 'Engineering'}) has officially cleared and exited the college main gate.
-
-⏱️ *Exit Timestamp:* ${activeExitData.exitTime} (IST)
-🔒 *Gate Status:* Verified & Exited ✅
-
-_College Security & Administration Office_`;
-
-      const targetNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-      const whatsappUrl = `https://wa.me/${targetNumber}?text=${encodeURIComponent(messageText)}`;
-
-      window.open(whatsappUrl, '_blank');
-    }
-
-    function handleManualScan(e) {
-      e.preventDefault();
-      const input = document.getElementById('manualRollInput');
-      verifyPass(input.value);
-      input.value = '';
-    }
-
-    // Initialize High-Speed Video Stream & Continuous Reader
-    function startFastScanner() {
-      codeReader = new ZXing.BrowserMultiFormatReader();
-      
-      codeReader.listVideoInputDevices()
-        .then((videoInputDevices) => {
-          let selectedDeviceId = undefined;
-          
-          // Select back camera if available
-          const backCamera = videoInputDevices.find(device => 
-            device.label.toLowerCase().includes('back') || 
-            device.label.toLowerCase().includes('rear') || 
-            device.label.toLowerCase().includes('environment')
-          );
-          
-          if (backCamera) {
-            selectedDeviceId = backCamera.deviceId;
-          } else if (videoInputDevices.length > 0) {
-            selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
-          }
-
-          codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
-            if (result && !isScanning) {
-              isScanning = true;
-              verifyPass(result.getText());
+                if (data.success) {
+                    const pass = data.pass;
+                    resultBox.className = "p-4 rounded-xl text-xs mb-4 bg-emerald-600 text-white shadow-lg space-y-1";
+                    resultBox.innerHTML = `
+                        <div class="text-sm font-bold border-b border-emerald-400 pb-1 mb-1">✅ ACCESS GRANTED</div>
+                        <div><b>Roll No:</b> <span class="font-mono">${pass.rollNo}</span></div>
+                        <div><b>Name:</b> ${pass.name || 'Student'} | <b>Dept:</b> ${pass.dept || 'Engineering'}</div>
+                        <div><b>Address:</b> ${pass.address || '-'}</div>
+                        <div class="text-[11px] text-emerald-100 pt-0.5 font-mono"><b>Exit Time:</b> ${pass.exitTime}</div>
+                        <div class="text-[10px] text-emerald-200 text-right italic pt-0.5">Holding display for 6s...</div>
+                    `;
+                } else {
+                    resultBox.className = "p-4 rounded-xl font-bold text-xs mb-4 bg-red-600 text-white shadow-lg";
+                    resultBox.innerHTML = `❌ ACCESS DENIED<br><span class="text-[11px] font-normal">${data.message || 'Pass Not Approved or Expired'}</span>`;
+                }
+            } catch (err) {
+                resultBox.className = "p-4 rounded-xl font-bold text-xs mb-4 bg-red-600 text-white shadow-lg";
+                resultBox.innerHTML = `❌ Connection Error`;
             }
-          });
-        })
-        .catch((err) => {
-          console.error("Camera initialisation error:", err);
-        });
-    }
 
-    window.addEventListener('load', startFastScanner);
-  </script>
+            document.getElementById('manualRoll').value = '';
+
+            // Display card for 6 seconds, then reset scanner
+            setTimeout(() => {
+                resultBox.classList.add('hidden');
+                resultBox.innerHTML = '';
+                isProcessing = false;
+                document.getElementById('manualRoll').focus();
+            }, 6000);
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            const val = document.getElementById('manualRoll').value;
+            verifyPass(val);
+        }
+
+        // Hardware-Accelerated Fast Engine
+        async function startInstantScanner() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+
+                // Check for Native Browser Barcode Detector
+                if ('BarcodeDetector' in window) {
+                    const barcodeDetector = new BarcodeDetector({
+                        formats: ['code_128', 'code_39', 'ean_13', 'qr_code', 'upc_a']
+                    });
+
+                    async function detectFrame() {
+                        if (!isProcessing && video.readyState === video.HAVE_ENOUGH_DATA) {
+                            try {
+                                const barcodes = await barcodeDetector.detect(video);
+                                if (barcodes.length > 0) {
+                                    verifyPass(barcodes[0].rawValue);
+                                }
+                            } catch (e) {}
+                        }
+                        requestAnimationFrame(detectFrame);
+                    }
+                    detectFrame();
+                } else {
+                    // Fallback to ZXing Reader
+                    const codeReader = new ZXing.BrowserMultiFormatReader();
+                    codeReader.decodeFromVideoDevice(null, 'video', (result) => {
+                        if (result && !isProcessing) {
+                            verifyPass(result.text);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Camera Error:", err);
+                document.getElementById('scanStatus').innerText = "Manual Mode Ready";
+            }
+        }
+
+        window.onload = startInstantScanner;
+    </script>
 </body>
 </html>
