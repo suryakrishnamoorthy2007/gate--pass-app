@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Security Gate Scanner</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- Ultra-Fast Lightweight ZXing Scanner Library -->
+  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 font-sans p-4 flex flex-col items-center justify-center">
@@ -15,15 +16,19 @@
     <!-- Header -->
     <div class="text-center space-y-1">
       <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full text-xl mb-1">
-        <i class="fa-solid fa-shield-halved"></i>
+        <i class="fa-solid fa-bolt-lightning text-emerald-400"></i>
       </div>
-      <h1 class="text-xl font-bold text-white tracking-wide">Main Gate Security Scanner</h1>
-      <p class="text-xs text-slate-400">Scan student barcode/ID card to verify exit clearance</p>
+      <h1 class="text-xl font-bold text-white tracking-wide">Main Gate Instant Scanner</h1>
+      <p class="text-xs text-slate-400">High-speed real-time barcode / QR verification</p>
     </div>
 
-    <!-- Camera Scanner Box -->
-    <div class="relative overflow-hidden rounded-2xl bg-black border-2 border-slate-600 aspect-square flex items-center justify-center">
-      <div id="reader" class="w-full h-full"></div>
+    <!-- Video Camera Feed -->
+    <div class="relative overflow-hidden rounded-2xl bg-black border-2 border-slate-600 aspect-square flex items-center justify-center shadow-inner">
+      <video id="video" class="w-full h-full object-cover"></video>
+      <!-- Visual Target Box -->
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="w-56 h-56 border-2 border-dashed border-emerald-400/70 rounded-xl"></div>
+      </div>
     </div>
 
     <!-- Manual Entry Form -->
@@ -52,7 +57,7 @@
         <p id="statusDesc" class="text-xs text-slate-300 mt-1"></p>
       </div>
 
-      <!-- Verified Student Info Details -->
+      <!-- Student Details -->
       <div id="studentDetails" class="hidden bg-slate-900/60 rounded-xl p-3 text-left text-xs space-y-1 border border-slate-700/50">
         <div class="flex justify-between"><span class="text-slate-400">Student:</span> <span id="resName" class="font-semibold text-white"></span></div>
         <div class="flex justify-between"><span class="text-slate-400">Roll No:</span> <span id="resRoll" class="font-mono text-emerald-400 font-bold"></span></div>
@@ -74,7 +79,9 @@
   </div>
 
   <script>
+    let codeReader;
     let activeExitData = null;
+    let isScanning = false;
 
     async function verifyPass(rollNo) {
       if (!rollNo) return;
@@ -119,7 +126,7 @@
           resultBox.className = "rounded-2xl p-5 border text-center space-y-3 bg-red-950/40 border-red-500/40 text-red-200";
           statusIcon.innerHTML = "❌";
           statusTitle.textContent = "EXIT DENIED";
-          statusDesc.textContent = data.message || "No approved pass found for this student.";
+          statusDesc.textContent = data.message || "No active approved pass found.";
           
           studentDetails.classList.add('hidden');
           whatsappBtn.classList.add('hidden');
@@ -127,11 +134,14 @@
       } catch (err) {
         resultBox.className = "rounded-2xl p-5 border text-center space-y-3 bg-amber-950/40 border-amber-500/40 text-amber-200";
         statusIcon.innerHTML = "⚠️";
-        statusTitle.textContent = "CONNECTION ERROR";
-        statusDesc.textContent = "Could not connect to server.";
+        statusTitle.textContent = "SERVER ERROR";
+        statusDesc.textContent = "Could not connect to database.";
         studentDetails.classList.add('hidden');
         whatsappBtn.classList.add('hidden');
       }
+
+      // Resume scanning after 2 seconds
+      setTimeout(() => { isScanning = false; }, 2000);
     }
 
     function triggerWhatsAppMessage() {
@@ -169,23 +179,40 @@ _College Security & Administration Office_`;
       input.value = '';
     }
 
-    function initScanner() {
-      const html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    // Initialize High-Speed Video Stream & Continuous Reader
+    function startFastScanner() {
+      codeReader = new ZXing.BrowserMultiFormatReader();
+      
+      codeReader.listVideoInputDevices()
+        .then((videoInputDevices) => {
+          let selectedDeviceId = undefined;
+          
+          // Select back camera if available
+          const backCamera = videoInputDevices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear') || 
+            device.label.toLowerCase().includes('environment')
+          );
+          
+          if (backCamera) {
+            selectedDeviceId = backCamera.deviceId;
+          } else if (videoInputDevices.length > 0) {
+            selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+          }
 
-      html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-          verifyPass(decodedText);
-        },
-        (errorMessage) => {}
-      ).catch(err => {
-        console.warn("Camera access denied or unavailable:", err);
-      });
+          codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
+            if (result && !isScanning) {
+              isScanning = true;
+              verifyPass(result.getText());
+            }
+          });
+        })
+        .catch((err) => {
+          console.error("Camera initialisation error:", err);
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', initScanner);
+    window.addEventListener('load', startFastScanner);
   </script>
 </body>
 </html>
