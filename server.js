@@ -17,7 +17,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// --- IST DATE & TIME FORMATTER HELPER ---
+// --- 2. IST DATE & TIME FORMATTER HELPER ---
 function getISTTimeString(date = new Date()) {
   return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -31,7 +31,7 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// --- 2. SCHEMAS ---
+// --- 3. SCHEMAS ---
 const StudentSchema = new mongoose.Schema({
   rollNo: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -41,8 +41,7 @@ const StudentSchema = new mongoose.Schema({
   yearSec: { type: String, default: 'III / A' },
   mobile: { type: String, default: '-' },
   parentContact: { type: String, default: '-' },
-  email: { type: String, default: '-' },
-  address: { type: String, default: '-' }
+  address: { type: String, default: 'Campus / Hostel' }
 });
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -55,8 +54,7 @@ const PassSchema = new mongoose.Schema({
   yearSec: { type: String, default: 'III / A' },
   mobile: { type: String, default: '-' },
   parentContact: { type: String, default: '-' },
-  email: { type: String, default: '-' },
-  address: { type: String, default: '-' },
+  address: { type: String, default: 'Campus / Hostel' },
   status: { type: String, default: 'Approved' },
   approvalTime: String,
   exitTime: { type: String, default: '-' },
@@ -65,18 +63,16 @@ const PassSchema = new mongoose.Schema({
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// Admin Credentials
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 
-// --- 3. PAGE ROUTES ---
+// --- 4. PAGE ROUTES ---
 app.get('/', (req, res) => res.redirect('/admin'));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'security.html')));
 
-// --- 4. API ENDPOINTS ---
+// --- 5. API ENDPOINTS ---
 
-// Admin Login
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
@@ -86,7 +82,6 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// Check Student Database Count
 app.get('/api/students/count', async (req, res) => {
   try {
     const count = await Student.countDocuments();
@@ -96,7 +91,7 @@ app.get('/api/students/count', async (req, res) => {
   }
 });
 
-// Bulk Upload Excel / CSV
+// Upload & Parse Student Excel Sheet
 app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -106,13 +101,13 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
     const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
     const rows = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
     if (!rows || rows.length === 0) {
       return res.status(400).json({ success: false, message: "The Excel file is empty" });
     }
 
+    // Auto-detect header row
     let headerRowIdx = -1;
     for (let i = 0; i < rows.length; i++) {
       const rowStr = rows[i].map(cell => String(cell).toLowerCase().replace(/[^a-z0-9]/g, ''));
@@ -125,10 +120,7 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
     if (headerRowIdx === -1) headerRowIdx = 0;
 
     const rawHeaders = rows[headerRowIdx].map(h => String(h).trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
-
-    const getColIndex = (keywords) => {
-      return rawHeaders.findIndex(h => keywords.some(k => h.includes(k)));
-    };
+    const getColIndex = (keywords) => rawHeaders.findIndex(h => keywords.some(k => h.includes(k)));
 
     const rollIdx = getColIndex(['roll', 'reg', 'id']);
     const nameIdx = getColIndex(['name', 'studentname']);
@@ -137,8 +129,7 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
     const secIdx = getColIndex(['sec', 'section']);
     const yearSecIdx = getColIndex(['yearsec', 'classsec']);
     const mobileIdx = getColIndex(['mobile', 'phone', 'studentmobile', 'contact']);
-    const parentIdx = getColIndex(['parent', 'guardian', 'father', 'emergency']);
-    const emailIdx = getColIndex(['email', 'mail']);
+    const parentIdx = getColIndex(['parentmobile', 'parentcontact', 'parent', 'guardian', 'father', 'emergency']);
     const addressIdx = getColIndex(['address', 'hostel', 'place', 'city', 'location']);
 
     let count = 0;
@@ -152,44 +143,28 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
 
       const studentName = nameIdx !== -1 && row[nameIdx] ? String(row[nameIdx]).trim() : 'Student';
       const dept = deptIdx !== -1 && row[deptIdx] ? String(row[deptIdx]).trim() : 'Engineering';
-      
       const year = yearIdx !== -1 && row[yearIdx] ? String(row[yearIdx]).trim() : 'III';
       const sec = secIdx !== -1 && row[secIdx] ? String(row[secIdx]).trim() : 'A';
       const yearSec = yearSecIdx !== -1 && row[yearSecIdx] ? String(row[yearSecIdx]).trim() : `${year} / ${sec}`;
-      
       const mobile = mobileIdx !== -1 && row[mobileIdx] ? String(row[mobileIdx]).trim() : '-';
       const parentContact = parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : mobile;
-      const email = emailIdx !== -1 && row[emailIdx] ? String(row[emailIdx]).trim() : '-';
       const address = addressIdx !== -1 && row[addressIdx] ? String(row[addressIdx]).trim() : 'Campus / Hostel';
 
       await Student.findOneAndUpdate(
         { rollNo: rollNo },
-        {
-          rollNo: rollNo,
-          name: studentName,
-          dept: dept,
-          year: year,
-          sec: sec,
-          yearSec: yearSec,
-          mobile: mobile,
-          parentContact: parentContact,
-          email: email,
-          address: address
-        },
+        { rollNo, name: studentName, dept, year, sec, yearSec, mobile, parentContact, address },
         { upsert: true }
       );
       count++;
     }
 
-    console.log(`✅ Successfully imported ${count} student(s) into MongoDB Atlas`);
-    res.json({ success: true, message: `Successfully imported ${count} student${count === 1 ? '' : 's'}!`, count: count });
+    res.json({ success: true, message: `Successfully imported ${count} student${count === 1 ? '' : 's'}!`, count });
   } catch (err) {
-    console.error("❌ Excel Parse Error:", err);
     res.status(500).json({ success: false, message: `Error parsing file: ${err.message}` });
   }
 });
 
-// Fetch Passes for Admin Table & PDF
+// Get Passes Log
 app.get('/api/passes', async (req, res) => {
   try {
     const passes = await Pass.find().sort({ createdAt: -1 });
@@ -199,7 +174,7 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Admin Approves Pass
+// Admin Approve Gate Pass (20 Mins Validity)
 app.post('/api/approve-pass', async (req, res) => {
   try {
     const { rollNo } = req.body;
@@ -217,13 +192,12 @@ app.post('/api/approve-pass', async (req, res) => {
         yearSec: 'III / A',
         mobile: '-',
         parentContact: '-',
-        email: '-',
         address: 'Campus / Hostel'
       };
     }
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 20 * 60 * 1000); // 20-minute validity
+    const expiresAt = new Date(now.getTime() + 20 * 60 * 1000);
 
     const newPass = new Pass({
       rollNo: cleanRollNo,
@@ -233,8 +207,7 @@ app.post('/api/approve-pass', async (req, res) => {
       sec: student.sec || 'A',
       yearSec: student.yearSec || `${student.year || 'III'} / ${student.sec || 'A'}`,
       mobile: student.mobile,
-      parentContact: student.parentContact || student.mobile,
-      email: student.email,
+      parentContact: student.parentContact || student.mobile || '-',
       address: student.address,
       status: 'Approved',
       approvalTime: getISTTimeString(now),
@@ -249,7 +222,7 @@ app.post('/api/approve-pass', async (req, res) => {
   }
 });
 
-// Security Gate Scanner (Instant pass verification)
+// Gate Scanner Verification Endpoint
 app.post('/api/scan-pass', async (req, res) => {
   try {
     const { rollNo } = req.body;
@@ -273,7 +246,7 @@ app.post('/api/scan-pass', async (req, res) => {
     pass.exitTime = exitFormattedTime;
     await pass.save();
 
-    console.log(`🚪 [GATE EXIT CONFIRMED] Student: ${pass.name} (${pass.rollNo}) at ${exitFormattedTime}`);
+    console.log(`🚪 [GATE EXIT CONFIRMED] ${pass.name} (${pass.rollNo}) at ${exitFormattedTime}`);
     res.json({ success: true, pass });
   } catch (err) {
     res.status(500).json({ error: err.message });
