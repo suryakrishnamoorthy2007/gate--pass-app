@@ -73,9 +73,12 @@
                         <div><b>Roll No:</b> <span class="font-mono">${pass.rollNo}</span></div>
                         <div><b>Name:</b> ${pass.name || 'Student'} | <b>Dept:</b> ${pass.dept || 'Engineering'}</div>
                         <div><b>Address:</b> ${pass.address || '-'}</div>
-                        <div class="text-[11px] text-emerald-100 pt-0.5 font-mono"><b>Exit Time:</b> ${pass.exitTime}</div>
-                        <div class="text-[10px] text-emerald-200 text-right italic pt-0.5">Holding display for 6s...</div>
-                    `;
+                     <div class="text-[11px] text-emerald-100 pt-0.5 font-mono"><b>Exit Time:</b> ${pass.exitTime}</div>
+<button onclick="sendParentWhatsApp('${pass.name}', '${pass.rollNo}', '${pass.dept || 'Engineering'}', '${pass.parentContact || pass.mobile || ''}', '${pass.exitTime}')" class="w-full mt-2 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg text-xs shadow flex items-center justify-center gap-1">
+  💬 Send WhatsApp Alert to Parent
+</button>
+<div class="text-[10px] text-emerald-200 text-right italic pt-0.5">Holding display...</div>
+`;
                 } else {
                     resultBox.className = "p-4 rounded-xl font-bold text-xs mb-4 bg-red-600 text-white shadow-lg";
                     resultBox.innerHTML = `❌ ACCESS DENIED<br><span class="text-[11px] font-normal">${data.message || 'Pass Not Approved or Expired'}</span>`;
@@ -144,6 +147,29 @@
         }
 
         window.onload = startInstantScanner;
+        function sendParentWhatsApp(name, rollNo, dept, parentMobile, exitTime) {
+  const cleanPhone = (parentMobile || '').replace(/[^0-9]/g, '');
+
+  if (!cleanPhone || cleanPhone.length < 10) {
+    alert('No valid parent mobile number found for this student.');
+    return;
+  }
+
+  const message = encodeURIComponent(
+`🚨 *CAMPUS GATE EXIT NOTIFICATION*
+
+Dear Parent / Guardian,
+Your ward *${name}* (Roll No: *${rollNo}*, ${dept}) has officially cleared and exited the college main gate.
+
+⏱️ *Exit Timestamp:* ${exitTime} (IST)
+🔒 *Gate Status:* Verified & Exited ✅
+
+_College Security & Administration Office_`
+  );
+
+  const targetNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  window.open(`https://wa.me/${targetNumber}?text=${message}`, '_blank');
+}
     </script>
 </body>
 </html>
