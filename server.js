@@ -282,3 +282,15 @@ app.post('/api/scan-pass', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Gate Pass Server running on port ${PORT}`));
+const https = require('https');
+
+// Keep-alive: Ping every 10 minutes
+const APP_URL = 'https://gate-pass-app-t0gq.onrender.com/api/students/count';
+
+setInterval(() => {
+  https.get(APP_URL, (res) => {
+    console.log('[Keep-Alive] Ping sent - Status: ' + res.statusCode);
+  }).on('error', (err) => {
+    console.error('[Keep-Alive] Ping error:', err.message);
+  });
+}, 10 * 60 * 1000);
