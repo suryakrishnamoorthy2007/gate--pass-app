@@ -9,6 +9,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
+    <!-- ================= ULTRA-MODERN CYBER SPLASH SCREEN ================= -->
+<div id="splashScreen" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-between py-12 px-4 transition-all duration-1000 overflow-hidden select-none">
+  
+  <!-- Cyber Background Ambient Glows -->
+  <div class="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <!-- Top System Badge -->
+  <div class="z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    <span class="text-[10px] font-mono tracking-widest text-emerald-300 font-bold uppercase">SYSTEM SECURE • READY</span>
+  </div>
+
+  <!-- Center Holographic Shield Logo -->
+  <div class="z-10 flex flex-col items-center text-center space-y-6">
+    <div class="relative flex items-center justify-center">
+      <!-- Outer Rotating Cyber Ring -->
+      <div class="absolute w-32 h-32 border-2 border-dashed border-emerald-500/40 rounded-full animate-[spin_10s_linear_infinite]"></div>
+      <!-- Middle Reverse Ring -->
+      <div class="absolute w-28 h-28 border border-teal-400/50 rounded-full animate-[spin_6s_linear_infinite_reverse]"></div>
+      <!-- Center Emblem Card with Neon Glow -->
+      <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-[2px] shadow-[0_0_40px_rgba(16,185,129,0.45)]">
+        <div class="w-full h-full bg-slate-900/95 backdrop-blur-xl rounded-[14px] flex items-center justify-center text-4xl shadow-inner">
+          🛡️
+        </div>
+      </div>
+    </div>
+    
+    <!-- Title and Subtitle -->
+    <div class="space-y-1.5">
+      <h1 class="text-2xl md:text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-teal-300 uppercase">
+        Smart Gate Pass
+      </h1>
+      <p class="text-[11px] md:text-xs font-mono tracking-[0.28em] text-emerald-400 font-semibold uppercase">
+        INSTITUTIONAL ACCESS ENGINE
+      </p>
+    </div>
+
+    <!-- Progress Indicator Bar -->
+    <div class="w-44 h-1.5 bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/60 p-[1px]">
+      <div class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+    </div>
+  </div>
+
+  <!-- Developer Credits Footer -->
+  <div class="z-10 text-center">
+    <div class="inline-block px-5 py-2 rounded-xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-md shadow-lg">
+      <p class="text-[10px] tracking-[0.2em] text-slate-400 uppercase">Engineered & Developed by</p>
+      <p class="text-sm font-black tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 mt-0.5">
+        SURYA
+      </p>
+    </div>
+  </div>
+
+</div>
+<!-- =================================================================== -->
 
     <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200">
@@ -380,6 +437,20 @@
                 loadPasses();
             }
         }, 5000);
+        // Smooth fade and zoom transition for the splash screen
+window.addEventListener('load', () => {
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      splash.style.transform = 'scale(1.05)';
+      splash.style.pointerEvents = 'none';
+      setTimeout(() => {
+        splash.style.display = 'none';
+      }, 1000);
+    }, 1500);
+  }
+});
     </script>
 </body>
 </html>
