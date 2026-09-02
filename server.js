@@ -234,11 +234,12 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
 // --- WORKFLOW APIs ---
 app.get('/api/passes', async (req, res) => {
   try {
-    const { status, dept, rollNo } = req.query;
+    const { status, dept, rollNo, batch } = req.query;
     let filter = {};
     if (status) filter.status = status;
     if (dept) filter.dept = dept.toUpperCase();
     if (rollNo) filter.rollNo = rollNo.trim();
+    if (batch) filter.batch = batch.trim();
     const passes = await Pass.find(filter).sort({ createdAt: -1 });
     res.json(passes);
   } catch (err) {
