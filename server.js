@@ -11,14 +11,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-// --- 1. MONGODB CONNECTION ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:AdminPass123@cluster0.gpgplkf.mongodb.net/gatepass?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// --- 2. IST TIME HELPER ---
 function getISTTimeString(date = new Date()) {
   return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -32,7 +30,7 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// --- 3. SCHEMAS ---
+// --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -54,7 +52,8 @@ const StudentSchema = new mongoose.Schema({
   counselorName: { type: String, default: 'Class Counselor' },
   mobile: { type: String, default: '-' },
   parentContact: { type: String, required: true },
-  address: { type: String, default: 'Campus / Hostel' }
+  email: { type: String, default: '-' },
+  address: { type: String, default: 'Campus Hostel' }
 });
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -64,7 +63,10 @@ const PassSchema = new mongoose.Schema({
   dept: String,
   yearSec: String,
   batch: String,
+  mobile: String,
   parentContact: String,
+  email: String,
+  address: String,
   reason: { type: String, required: true },
   
   status: {
@@ -73,27 +75,40 @@ const PassSchema = new mongoose.Schema({
     default: 'Pending Counselor'
   },
 
-  // Phone Call Verification Audit Trail
+  // Audit Trails
+  parentCalledBy: { type: String, default: '-' }, // 'Counselor' or 'Advisor'
+  parentCallVerified: { type: Boolean, default: false },
+  parentCallTime: { type: String, default: '-' },
+
   counselorApproval: {
     counselorName: String,
     approved: { type: Boolean, default: false },
-    parentCalled: { type: Boolean, default: false },
-    callStatus: { type: String, default: 'Not Verified' },
     time: String
   },
-  advisorApproval: { approved: { type: Boolean, default: false }, time: String },
-  hodApproval: { approved: { type: Boolean, default: false }, time: String },
-  principalApproval: { approved: { type: Boolean, default: false }, time: String },
+  advisorApproval: { 
+    advisorName: String, 
+    approved: { type: Boolean, default: false }, 
+    time: String 
+  },
+  hodApproval: { 
+    approved: { type: Boolean, default: false }, 
+    time: String 
+  },
+  principalApproval: { 
+    approved: { type: Boolean, default: false }, 
+    time: String 
+  },
 
   approvalTime: String,
+  validUntil: String,
   expiresAt: Date,
-  exitStatus: { type: String, default: 'Inside Campus' }, // 'Inside Campus' or 'Exited Campus'
-  exitTime: { type: String, default: '-' }, // Stores full Date & Time (DD/MM/YYYY, HH:MM:SS AM/PM)
+  exitStatus: { type: String, default: 'Inside Campus' },
+  exitTime: { type: String, default: '-' },
   createdAt: { type: Date, default: Date.now }
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// --- 4. AUTHENTICATION ROUTES ---
+// --- AUTH ---
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { userId, name, password, role, dept, yearSec, batch } = req.body;
@@ -132,7 +147,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- 5. EXCEL UPLOAD BY COUNSELOR ---
+// --- EXCEL ROSTER UPLOAD ---
 app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "Please select an Excel file" });
@@ -149,15 +164,16 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
 
     const rollIdx = getCol(['roll', 'reg', 'id']);
     const nameIdx = getCol(['name', 'studentname']);
-    const parentIdx = getCol(['parent', 'mobile', 'phone', 'contact', 'father', 'guardian']);
+    const mobileIdx = getCol(['studentphone', 'studentmobile', 'mobile', 'phone']);
+    const parentIdx = getCol(['parent', 'father', 'guardian']);
+    const emailIdx = getCol(['email', 'mail']);
+    const addrIdx = getCol(['address', 'hostel', 'city', 'location']);
 
     let count = 0;
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i];
       let rollNo = rollIdx !== -1 && row[rollIdx] ? String(row[rollIdx]).trim() : '';
       if (!rollNo || rollNo.toLowerCase().includes('roll')) continue;
-
-      const parentContact = parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : '-';
 
       await Student.findOneAndUpdate(
         { rollNo },
@@ -168,27 +184,29 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
           yearSec: (yearSec || 'III-A').trim().toUpperCase(),
           batch: (batch || 'Batch 1').trim(),
           counselorName: counselorName || 'Counselor',
-          parentContact
+          mobile: mobileIdx !== -1 && row[mobileIdx] ? String(row[mobileIdx]).trim() : '-',
+          parentContact: parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : '-',
+          email: emailIdx !== -1 && row[emailIdx] ? String(row[emailIdx]).trim() : '-',
+          address: addrIdx !== -1 && row[addrIdx] ? String(row[addrIdx]).trim() : 'Hostel / Day Scholar'
         },
         { upsert: true }
       );
       count++;
     }
-    res.json({ success: true, message: `Successfully registered ${count} students with parent phone numbers!`, count });
+    res.json({ success: true, message: `Successfully registered ${count} students with full records!`, count });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// --- 6. WORKFLOW ENDPOINTS ---
-
-// Fetch Passes (Filterable)
+// --- WORKFLOW APIs ---
 app.get('/api/passes', async (req, res) => {
   try {
-    const { status, dept } = req.query;
+    const { status, dept, rollNo } = req.query;
     let filter = {};
     if (status) filter.status = status;
     if (dept) filter.dept = dept.toUpperCase();
+    if (rollNo) filter.rollNo = rollNo.trim();
     const passes = await Pass.find(filter).sort({ createdAt: -1 });
     res.json(passes);
   } catch (err) {
@@ -196,12 +214,12 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Student Applies
+// Student Apply
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
     const student = await Student.findOne({ rollNo: (rollNo || '').trim() });
-    if (!student) return res.status(404).json({ success: false, message: "Roll number not found in student roster. Please ask your counselor to upload your batch." });
+    if (!student) return res.status(404).json({ success: false, message: "Roll number not found. Ask your counselor to upload your batch roster." });
 
     const newPass = new Pass({
       rollNo: student.rollNo,
@@ -209,7 +227,10 @@ app.post('/api/apply-pass', async (req, res) => {
       dept: student.dept,
       yearSec: student.yearSec,
       batch: student.batch,
+      mobile: student.mobile,
       parentContact: student.parentContact,
+      email: student.email,
+      address: student.address,
       reason: reason.trim(),
       status: 'Pending Counselor',
       exitStatus: 'Inside Campus',
@@ -217,13 +238,13 @@ app.post('/api/apply-pass', async (req, res) => {
     });
 
     await newPass.save();
-    res.json({ success: true, message: `Application submitted! Forwarded to Counselor (${student.counselorName}) for parent call verification.` });
+    res.json({ success: true, message: `Pass applied! Forwarded to Counselor (${student.counselorName}).` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Counselor Approval with Parent Phone Verification
+// Counselor Approval (With Parent Phone Call Verification)
 app.post('/api/approve/counselor', async (req, res) => {
   try {
     const { passId, parentCalled, counselorName } = req.body;
@@ -231,30 +252,47 @@ app.post('/api/approve/counselor', async (req, res) => {
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
     pass.status = 'Pending Advisor';
+    pass.parentCallVerified = !!parentCalled;
+    pass.parentCalledBy = 'Counselor (' + (counselorName || 'Assigned Counselor') + ')';
+    pass.parentCallTime = getISTTimeString();
     pass.counselorApproval = {
       counselorName: counselorName || 'Counselor',
       approved: true,
-      parentCalled: !!parentCalled,
-      callStatus: parentCalled ? 'Parent Approved via Phone Call' : 'Unconfirmed',
       time: getISTTimeString()
     };
     await pass.save();
-    res.json({ success: true, message: 'Parent verification saved! Forwarded to Class Advisor.' });
+    res.json({ success: true, message: 'Verified by Counselor & forwarded to Class Advisor.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Advisor Approval
+// Class Advisor Approval (Includes Counselor-Absent Parent Call Fallback)
 app.post('/api/approve/advisor', async (req, res) => {
   try {
-    const pass = await Pass.findById(req.body.passId);
+    const { passId, advisorName, parentCalledFallback } = req.body;
+    const pass = await Pass.findById(passId);
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
+    // Fallback: If counselor did not verify call, Advisor can verify parent call
+    if (!pass.parentCallVerified && parentCalledFallback) {
+      pass.parentCallVerified = true;
+      pass.parentCalledBy = 'Class Advisor (' + (advisorName || 'Advisor') + ') [Counselor Absent]';
+      pass.parentCallTime = getISTTimeString();
+    }
+
+    if (!pass.parentCallVerified) {
+      return res.status(400).json({ success: false, message: 'Cannot forward to HOD! Parent must be contacted by either Counselor or Class Advisor first.' });
+    }
+
     pass.status = 'Pending HOD';
-    pass.advisorApproval = { approved: true, time: getISTTimeString() };
+    pass.advisorApproval = {
+      advisorName: advisorName || 'Class Advisor',
+      approved: true,
+      time: getISTTimeString()
+    };
     await pass.save();
-    res.json({ success: true, message: 'Approved by Class Advisor. Forwarded to HOD.' });
+    res.json({ success: true, message: 'Approved by Class Advisor & forwarded to HOD.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -266,34 +304,41 @@ app.post('/api/approve/hod', async (req, res) => {
     const pass = await Pass.findById(req.body.passId);
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
+    if (!pass.parentCallVerified) {
+      return res.status(400).json({ success: false, message: 'Parent verification check missing.' });
+    }
+
     pass.status = 'Pending Principal';
     pass.hodApproval = { approved: true, time: getISTTimeString() };
     await pass.save();
-    res.json({ success: true, message: 'Approved by HOD. Forwarded to Principal.' });
+    res.json({ success: true, message: 'HOD authorized! Forwarded to Principal for final clearance.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Principal Approval (Starts 20-Min Exit Validity)
+// Principal Approval (Starts 20-Min Expiry Countdown)
 app.post('/api/approve/principal', async (req, res) => {
   try {
     const pass = await Pass.findById(req.body.passId);
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
     const now = new Date();
+    const expiry = new Date(now.getTime() + 20 * 60 * 1000);
+
     pass.status = 'Approved';
     pass.principalApproval = { approved: true, time: getISTTimeString(now) };
     pass.approvalTime = getISTTimeString(now);
-    pass.expiresAt = new Date(now.getTime() + 20 * 60 * 1000);
+    pass.validUntil = getISTTimeString(expiry);
+    pass.expiresAt = expiry;
     await pass.save();
-    res.json({ success: true, message: 'Principal approval granted! Student authorized to exit.' });
+    res.json({ success: true, message: 'Final Principal clearance granted! 20-minute gate validity started.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Security Scan at Main Gate
+// Security Gate Scan
 app.post('/api/scan-pass', async (req, res) => {
   try {
     const cleanRollNo = (req.body.rollNo || '').trim();
@@ -310,7 +355,7 @@ app.post('/api/scan-pass', async (req, res) => {
 
     pass.status = 'Exited';
     pass.exitStatus = 'Exited Campus';
-    pass.exitTime = getISTTimeString(now); // Full Date & Time with seconds in IST
+    pass.exitTime = getISTTimeString(now);
     await pass.save();
 
     res.json({ success: true, pass });
@@ -319,12 +364,11 @@ app.post('/api/scan-pass', async (req, res) => {
   }
 });
 
-// --- 7. STATIC ROUTES & KEEP ALIVE ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'security.html')));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 GateMatrix running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 GateMatrix Running on port ${PORT}`));
 
 setInterval(() => {
   https.get('https://gate-pass-app-t0gq.onrender.com/api/passes', () => {}).on('error', () => {});
