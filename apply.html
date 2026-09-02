@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GateMatrix • Student Leave Application</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Glow Backgrounds -->
+  <div class="fixed -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <div class="max-w-md w-full mx-auto relative z-10 my-auto">
+    
+    <!-- Branding Header -->
+    <div class="text-center mb-6 space-y-2">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-center">
+        <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-3xl">
+          🛡️
+        </div>
+      </div>
+      <h1 class="text-2xl font-black tracking-wider text-white uppercase">GateMatrix</h1>
+      <p class="text-xs text-emerald-400 font-mono tracking-widest uppercase">Student Leave / Outpass Portal</p>
+    </div>
+
+    <!-- Application Form Card -->
+    <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      
+      <!-- Roll Number Input -->
+      <div>
+        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+          Student Roll / Register Number
+        </label>
+        <input 
+          type="text" 
+          id="studentRoll" 
+          placeholder="e.g. 110324104107"
+          class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+        >
+      </div>
+
+      <!-- Outpass Type -->
+      <div>
+        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+          Pass Category
+        </label>
+        <select 
+          id="passType" 
+          class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition"
+        >
+          <option value="Emergency Outpass">Emergency Gate Outpass</option>
+          <option value="Medical Permission">Medical / Hospital Visit</option>
+          <option value="Official Work / Event">College / Dept Duty</option>
+          <option value="Home Visit">Weekend / Home Leave</option>
+        </select>
+      </div>
+
+      <!-- Reason Textarea -->
+      <div>
+        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+          Detailed Reason
+        </label>
+        <textarea 
+          id="leaveReason" 
+          rows="3" 
+          placeholder="State your exact reason for outpass..."
+          class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        onclick="submitLeaveRequest()" 
+        id="submitBtn"
+        class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] transition active:scale-[0.99] flex items-center justify-center gap-2"
+      >
+        <span>Send for Verification</span>
+        <span>➔</span>
+      </button>
+
+      <!-- Status Alert Box -->
+      <div id="statusAlert" class="hidden p-4 rounded-xl text-xs font-medium text-center transition"></div>
+
+    </div>
+
+    <!-- Instructions -->
+    <div class="mt-6 p-4 rounded-2xl bg-slate-900/50 border border-slate-800/80 text-[11px] text-slate-400 space-y-1 text-center">
+      <p>⚠️ Upon submission, your application routes directly to your <span class="text-emerald-400 font-semibold">Class Counselor</span>.</p>
+      <p>Parent contact verification will be completed before final approval.</p>
+    </div>
+
+  </div>
+
+  <!-- Developer Footer -->
+  <footer class="text-center text-[11px] text-slate-600 py-4 relative z-10">
+    <p>GateMatrix Institutional Engine • Developed by <span class="text-emerald-400 font-semibold">Surya</span></p>
+  </footer>
+
+  <script>
+    async function submitLeaveRequest() {
+      const rollNo = document.getElementById('studentRoll').value.trim();
+      const passType = document.getElementById('passType').value;
+      const detailedReason = document.getElementById('leaveReason').value.trim();
+      const statusAlert = document.getElementById('statusAlert');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (!rollNo) {
+        showAlert('Please enter your Student Roll / Register Number', 'error');
+        return;
+      }
+      if (!detailedReason) {
+        showAlert('Please provide a reason for the leave request', 'error');
+        return;
+      }
+
+      const fullReason = `[${passType}] ${detailedReason}`;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Submitting...';
+
+      try {
+        const response = await fetch('/api/apply-pass', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rollNo, reason: fullReason })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert(data.message, 'success');
+          document.getElementById('studentRoll').value = '';
+          document.getElementById('leaveReason').value = '';
+        } else {
+          showAlert(data.message || 'Submission failed.', 'error');
+        }
+      } catch (err) {
+        showAlert('Server connection error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Send for Verification</span> <span>➔</span>';
+      }
+    }
+
+    function showAlert(msg, type) {
+      const alertBox = document.getElementById('statusAlert');
+      alertBox.className = 'p-4 rounded-xl text-xs font-medium text-center ' + 
+        (type === 'success' 
+          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 block' 
+          : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 block');
+      alertBox.innerText = msg;
+    }
+  </script>
+</body>
+</html>
