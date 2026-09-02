@@ -30,6 +30,52 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
+// Formal Letter Generator Engine
+function generateFormalLetter(student, rawReason) {
+  const currentDate = new Date().toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  return `FORMAL LEAVE & INSTITUTIONAL OUTPASS APPLICATION
+
+Date: ${currentDate}
+
+From:
+${student.name}
+Roll Number: ${student.rollNo}
+Department of ${student.dept}, Year & Section: ${student.yearSec || 'III-A'}
+Batch: ${student.batch || 'General'}
+Contact: ${student.mobile || '-'} | Parent Contact: ${student.parentContact || '-'}
+
+Through:
+1. Assigned Class Counselor (${student.counselorName || 'Counselor'})
+2. Respective Class Advisor
+3. Head of the Department (HOD)
+
+To:
+The Principal / Executive Directorate,
+Institutional Campus Administration.
+
+Respected Sir/Madam,
+
+Subject: Requisition for authorized institutional leave / gate clearance - reg.
+
+I am writing this formal application to humbly inform the institutional authorities that I require permission to leave the campus premises due to the following necessity:
+
+"${rawReason.trim()}"
+
+I have duly briefed my parents regarding this departure, and they can be contacted at ${student.parentContact || '-'} for direct telephonic verification. I commit to adhering to campus discipline and completing any pending academic deliverables upon my return.
+
+Kindly grant me the requisite authorization and approve my campus gate pass for the aforementioned reason.
+
+Yours obediently,
+${student.name}
+(Roll No: ${student.rollNo})`;
+}
+
 // --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
@@ -68,6 +114,7 @@ const PassSchema = new mongoose.Schema({
   email: String,
   address: String,
   reason: { type: String, required: true },
+  formalLetter: { type: String, default: '' }, // Auto-generated letter text
   
   status: {
     type: String,
@@ -75,29 +122,14 @@ const PassSchema = new mongoose.Schema({
     default: 'Pending Counselor'
   },
 
-  // Audit Trails
-  parentCalledBy: { type: String, default: '-' }, // 'Counselor' or 'Advisor'
+  parentCalledBy: { type: String, default: '-' },
   parentCallVerified: { type: Boolean, default: false },
   parentCallTime: { type: String, default: '-' },
 
-  counselorApproval: {
-    counselorName: String,
-    approved: { type: Boolean, default: false },
-    time: String
-  },
-  advisorApproval: { 
-    advisorName: String, 
-    approved: { type: Boolean, default: false }, 
-    time: String 
-  },
-  hodApproval: { 
-    approved: { type: Boolean, default: false }, 
-    time: String 
-  },
-  principalApproval: { 
-    approved: { type: Boolean, default: false }, 
-    time: String 
-  },
+  counselorApproval: { counselorName: String, approved: { type: Boolean, default: false }, time: String },
+  advisorApproval: { advisorName: String, approved: { type: Boolean, default: false }, time: String },
+  hodApproval: { approved: { type: Boolean, default: false }, time: String },
+  principalApproval: { approved: { type: Boolean, default: false }, time: String },
 
   approvalTime: String,
   validUntil: String,
@@ -108,7 +140,7 @@ const PassSchema = new mongoose.Schema({
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// --- AUTH ---
+// --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { userId, name, password, role, dept, yearSec, batch } = req.body;
@@ -147,7 +179,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- EXCEL ROSTER UPLOAD ---
+// --- EXCEL UPLOAD ---
 app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "Please select an Excel file" });
@@ -214,12 +246,14 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Student Apply
+// Student Apply (Generates Formal Letter)
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
     const student = await Student.findOne({ rollNo: (rollNo || '').trim() });
     if (!student) return res.status(404).json({ success: false, message: "Roll number not found. Ask your counselor to upload your batch roster." });
+
+    const generatedLetter = generateFormalLetter(student, reason);
 
     const newPass = new Pass({
       rollNo: student.rollNo,
@@ -232,19 +266,20 @@ app.post('/api/apply-pass', async (req, res) => {
       email: student.email,
       address: student.address,
       reason: reason.trim(),
+      formalLetter: generatedLetter,
       status: 'Pending Counselor',
       exitStatus: 'Inside Campus',
       exitTime: '-'
     });
 
     await newPass.save();
-    res.json({ success: true, message: `Pass applied! Forwarded to Counselor (${student.counselorName}).` });
+    res.json({ success: true, message: `Formal letter generated & routed to Counselor (${student.counselorName}).` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Counselor Approval (With Parent Phone Call Verification)
+// Counselor Approval
 app.post('/api/approve/counselor', async (req, res) => {
   try {
     const { passId, parentCalled, counselorName } = req.body;
@@ -267,14 +302,13 @@ app.post('/api/approve/counselor', async (req, res) => {
   }
 });
 
-// Class Advisor Approval (Includes Counselor-Absent Parent Call Fallback)
+// Class Advisor Approval
 app.post('/api/approve/advisor', async (req, res) => {
   try {
     const { passId, advisorName, parentCalledFallback } = req.body;
     const pass = await Pass.findById(passId);
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
-    // Fallback: If counselor did not verify call, Advisor can verify parent call
     if (!pass.parentCallVerified && parentCalledFallback) {
       pass.parentCallVerified = true;
       pass.parentCalledBy = 'Class Advisor (' + (advisorName || 'Advisor') + ') [Counselor Absent]';
@@ -282,7 +316,7 @@ app.post('/api/approve/advisor', async (req, res) => {
     }
 
     if (!pass.parentCallVerified) {
-      return res.status(400).json({ success: false, message: 'Cannot forward to HOD! Parent must be contacted by either Counselor or Class Advisor first.' });
+      return res.status(400).json({ success: false, message: 'Parent must be contacted before forwarding to HOD!' });
     }
 
     pass.status = 'Pending HOD';
@@ -304,10 +338,6 @@ app.post('/api/approve/hod', async (req, res) => {
     const pass = await Pass.findById(req.body.passId);
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
-    if (!pass.parentCallVerified) {
-      return res.status(400).json({ success: false, message: 'Parent verification check missing.' });
-    }
-
     pass.status = 'Pending Principal';
     pass.hodApproval = { approved: true, time: getISTTimeString() };
     await pass.save();
@@ -317,7 +347,7 @@ app.post('/api/approve/hod', async (req, res) => {
   }
 });
 
-// Principal Approval (Starts 20-Min Expiry Countdown)
+// Principal Approval
 app.post('/api/approve/principal', async (req, res) => {
   try {
     const pass = await Pass.findById(req.body.passId);
@@ -332,7 +362,7 @@ app.post('/api/approve/principal', async (req, res) => {
     pass.validUntil = getISTTimeString(expiry);
     pass.expiresAt = expiry;
     await pass.save();
-    res.json({ success: true, message: 'Final Principal clearance granted! 20-minute gate validity started.' });
+    res.json({ success: true, message: 'Principal approval granted! 20-minute gate validity started.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -368,7 +398,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'security.html')));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 GateMatrix Running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 GateMatrix running on port ${PORT}`));
 
 setInterval(() => {
   https.get('https://gate-pass-app-t0gq.onrender.com/api/passes', () => {}).on('error', () => {});
