@@ -30,7 +30,6 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// Clean helper to extract pure section letter (e.g., "III-A" -> "a", "CSE B" -> "b")
 function extractSection(val) {
   if (!val) return '';
   const clean = String(val).trim().toLowerCase();
@@ -38,7 +37,14 @@ function extractSection(val) {
   return match ? match[1] : clean.replace(/[^a-z0-9]/g, '');
 }
 
-// Formal AI Letter Generator Engine
+// Clean numeric extractor for comparing roll ranges
+function extractRollNumber(val) {
+  if (!val) return 0n;
+  const digits = String(val).replace(/\D/g, '');
+  return digits ? BigInt(digits) : 0n;
+}
+
+// AI Formal Letter Engine
 function generateFormalLetter(student, rawReason) {
   const currentDate = new Date().toLocaleDateString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -91,6 +97,8 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, required: true },
   dept: { type: String, default: 'CSE' },
   yearSec: { type: String, default: 'A' },
+  startRoll: { type: String, default: '' }, // Starting roll number assigned to counselor
+  endRoll: { type: String, default: '' },   // Ending roll number assigned to counselor
   createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -145,10 +153,10 @@ const PassSchema = new mongoose.Schema({
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// Auth
+// Auth Register (Includes startRoll & endRoll for Counselors)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { userId, name, password, role, dept, yearSec } = req.body;
+    const { userId, name, password, role, dept, yearSec, startRoll, endRoll } = req.body;
     const cleanId = (userId || '').trim().toLowerCase();
 
     const existing = await User.findOne({ userId: cleanId });
@@ -160,7 +168,9 @@ app.post('/api/auth/register', async (req, res) => {
       password: password.trim(),
       role,
       dept: (dept || 'CSE').trim().toUpperCase(),
-      yearSec: (yearSec || 'A').trim().toUpperCase()
+      yearSec: (yearSec || 'A').trim().toUpperCase(),
+      startRoll: (startRoll || '').trim(),
+      endRoll: (endRoll || '').trim()
     });
     await newUser.save();
     res.json({ success: true, message: 'Registration successful! You can now log in.' });
@@ -231,47 +241,55 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
       );
       count++;
     }
-    res.json({ success: true, message: `Successfully uploaded ${count} students for counselor ${counselorName}!`, count });
+    res.json({ success: true, message: `Successfully registered ${count} students for counselor ${counselorName}!`, count });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// PASSES API: STRICT ROLE-BASED ACCESS CONTROL
+// PASSES API: ROLE ACCESS CONTROL (WITH COUNSELOR ROLL RANGE CHECK)
 app.get('/api/passes', async (req, res) => {
   try {
-    const { status, dept, rollNo, counselorName, yearSec, role } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll } = req.query;
     let filter = {};
 
     if (status) filter.status = status;
     if (rollNo) filter.rollNo = rollNo.trim();
 
-    // 1. COUNSELOR: Strictly sees ONLY their assigned counselling students
-    if (role === 'counselor' || counselorName) {
-      filter.counselorName = (counselorName || '').trim();
-    }
-
-    // 2. HOD: Strictly sees ONLY their department (all sections)
-    else if (role === 'hod' || (dept && !yearSec && role !== 'principal')) {
+    // HOD: department-wide
+    if (role === 'hod' || (dept && !yearSec && role !== 'principal' && role !== 'counselor')) {
       filter.dept = dept.toUpperCase().trim();
     }
-
-    // 3. CLASS ADVISOR: Strictly matches BOTH department AND section
-    else if (role === 'advisor' || (dept && yearSec)) {
+    // ADVISOR: department + section
+    else if (role === 'advisor') {
       filter.dept = dept.toUpperCase().trim();
     }
-
-    // 4. PRINCIPAL: No dept/section restrictions (sees entire college)
 
     let passes = await Pass.find(filter).sort({ createdAt: -1 });
 
-    // Strict Section Filter for Class Advisors (Ensures CSE-A never sees CSE-B)
+    // 1. COUNSELOR FILTERING (Matches startRoll to endRoll OR counselorName)
+    if (role === 'counselor') {
+      const sVal = extractRollNumber(startRoll);
+      const eVal = extractRollNumber(endRoll);
+
+      passes = passes.filter(p => {
+        // Direct counselor name match
+        if (counselorName && p.counselorName && p.counselorName.toLowerCase() === counselorName.toLowerCase().trim()) {
+          return true;
+        }
+        // Roll range match
+        if (sVal > 0n && eVal > 0n) {
+          const sNum = extractRollNumber(p.rollNo);
+          return sNum >= sVal && sNum <= eVal;
+        }
+        return false;
+      });
+    }
+
+    // 2. ADVISOR FILTERING (Strict Section isolation: CSE-A never sees CSE-B)
     if (role === 'advisor' && yearSec) {
       const targetSec = extractSection(yearSec);
-      passes = passes.filter(p => {
-        const studentSec = extractSection(p.yearSec);
-        return studentSec === targetSec;
-      });
+      passes = passes.filter(p => extractSection(p.yearSec) === targetSec);
     }
 
     res.json(passes);
@@ -280,25 +298,52 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Student Apply
+// Apply Pass (Auto-assigns Counselor using roll number range)
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
-    const student = await Student.findOne({ rollNo: (rollNo || '').trim() });
-    if (!student) return res.status(404).json({ success: false, message: "Roll number not found. Ask your counselor to upload your roster." });
+    const cleanRoll = (rollNo || '').trim();
+    let student = await Student.findOne({ rollNo: cleanRoll });
 
-    const generatedLetter = generateFormalLetter(student, reason);
+    // Find the counselor who registered this roll range if student not in roster yet
+    let assignedCounselor = student ? student.counselorName : 'Counselor';
+    if (!student || assignedCounselor === 'Class Counselor' || assignedCounselor === 'Counselor') {
+      const rollBig = extractRollNumber(cleanRoll);
+      const counselors = await User.find({ role: 'counselor' });
+      for (const c of counselors) {
+        const sVal = extractRollNumber(c.startRoll);
+        const eVal = extractRollNumber(c.endRoll);
+        if (sVal > 0n && eVal > 0n && rollBig >= sVal && rollBig <= eVal) {
+          assignedCounselor = c.name;
+          break;
+        }
+      }
+    }
+
+    const studentObj = student || {
+      rollNo: cleanRoll,
+      name: 'Student',
+      dept: 'CSE',
+      yearSec: 'A',
+      counselorName: assignedCounselor,
+      mobile: '-',
+      parentContact: '-',
+      email: '-',
+      address: 'Campus Hostel'
+    };
+
+    const generatedLetter = generateFormalLetter(studentObj, reason);
 
     const newPass = new Pass({
-      rollNo: student.rollNo,
-      name: student.name,
-      dept: student.dept,
-      yearSec: student.yearSec,
-      counselorName: student.counselorName,
-      mobile: student.mobile,
-      parentContact: student.parentContact,
-      email: student.email,
-      address: student.address,
+      rollNo: studentObj.rollNo,
+      name: studentObj.name,
+      dept: studentObj.dept,
+      yearSec: studentObj.yearSec,
+      counselorName: assignedCounselor,
+      mobile: studentObj.mobile,
+      parentContact: studentObj.parentContact,
+      email: studentObj.email,
+      address: studentObj.address,
       reason: reason.trim(),
       formalLetter: generatedLetter,
       status: 'Pending Counselor',
@@ -307,7 +352,7 @@ app.post('/api/apply-pass', async (req, res) => {
     });
 
     await newPass.save();
-    res.json({ success: true, message: `Formal letter generated & routed to Counselor (${student.counselorName}).` });
+    res.json({ success: true, message: `Pass applied! Routed to Counselor (${assignedCounselor}).` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
