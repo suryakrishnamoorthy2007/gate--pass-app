@@ -30,7 +30,15 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// AI Formal Letter Engine
+// Clean helper to extract pure section letter (e.g., "III-A" -> "a", "CSE B" -> "b")
+function extractSection(val) {
+  if (!val) return '';
+  const clean = String(val).trim().toLowerCase();
+  const match = clean.match(/[a-z]$/i) || clean.match(/(?:sec|section)[^a-z0-9]*([a-z])/i);
+  return match ? match[1] : clean.replace(/[^a-z0-9]/g, '');
+}
+
+// Formal AI Letter Generator Engine
 function generateFormalLetter(student, rawReason) {
   const currentDate = new Date().toLocaleDateString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -46,7 +54,7 @@ Date: ${currentDate}
 From:
 ${student.name}
 Roll Number: ${student.rollNo}
-Department of ${student.dept}, Year & Section: ${student.yearSec || 'III-A'}
+Department: ${student.dept} | Class/Section: ${student.yearSec || 'A'}
 Student Contact: ${student.mobile || '-'} | Parent Contact: ${student.parentContact || '-'}
 
 Through:
@@ -82,7 +90,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, required: true },
   dept: { type: String, default: 'CSE' },
-  yearSec: { type: String, default: 'III-A' },
+  yearSec: { type: String, default: 'A' },
   createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -91,7 +99,7 @@ const StudentSchema = new mongoose.Schema({
   rollNo: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   dept: { type: String, required: true },
-  yearSec: { type: String, default: 'III-A' },
+  yearSec: { type: String, default: 'A' },
   counselorName: { type: String, default: 'Class Counselor' },
   mobile: { type: String, default: '-' },
   parentContact: { type: String, required: true },
@@ -151,8 +159,8 @@ app.post('/api/auth/register', async (req, res) => {
       name: name.trim(),
       password: password.trim(),
       role,
-      dept: dept || 'CSE',
-      yearSec: yearSec || 'III-A'
+      dept: (dept || 'CSE').trim().toUpperCase(),
+      yearSec: (yearSec || 'A').trim().toUpperCase()
     });
     await newUser.save();
     res.json({ success: true, message: 'Registration successful! You can now log in.' });
@@ -192,6 +200,7 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
 
     const rollIdx = getCol(['roll', 'reg', 'id']);
     const nameIdx = getCol(['name', 'studentname']);
+    const secIdx = getCol(['sec', 'section', 'class']);
     const mobileIdx = getCol(['studentphone', 'studentmobile', 'mobile', 'phone']);
     const parentIdx = getCol(['parent', 'father', 'guardian']);
     const emailIdx = getCol(['email', 'mail']);
@@ -203,14 +212,16 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
       let rollNo = rollIdx !== -1 && row[rollIdx] ? String(row[rollIdx]).trim() : '';
       if (!rollNo || rollNo.toLowerCase().includes('roll')) continue;
 
+      const finalSec = (secIdx !== -1 && row[secIdx]) ? String(row[secIdx]).trim() : (yearSec || 'A');
+
       await Student.findOneAndUpdate(
         { rollNo },
         {
           rollNo,
           name: nameIdx !== -1 && row[nameIdx] ? String(row[nameIdx]).trim() : 'Student',
           dept: (dept || 'CSE').trim().toUpperCase(),
-          yearSec: (yearSec || 'III-A').trim().toUpperCase(),
-          counselorName: counselorName || 'Counselor',
+          yearSec: finalSec.toUpperCase(),
+          counselorName: (counselorName || 'Counselor').trim(),
           mobile: mobileIdx !== -1 && row[mobileIdx] ? String(row[mobileIdx]).trim() : '-',
           parentContact: parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : '-',
           email: emailIdx !== -1 && row[emailIdx] ? String(row[emailIdx]).trim() : '-',
@@ -220,30 +231,56 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
       );
       count++;
     }
-    res.json({ success: true, message: `Successfully registered ${count} students for counselor ${counselorName}!`, count });
+    res.json({ success: true, message: `Successfully uploaded ${count} students for counselor ${counselorName}!`, count });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Passes API (No batch dependency)
+// PASSES API: STRICT ROLE-BASED ACCESS CONTROL
 app.get('/api/passes', async (req, res) => {
   try {
-    const { status, dept, rollNo, counselorName } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role } = req.query;
     let filter = {};
-    if (status) filter.status = status;
-    if (dept) filter.dept = dept.toUpperCase();
-    if (rollNo) filter.rollNo = rollNo.trim();
-    if (counselorName) filter.counselorName = counselorName.trim();
 
-    const passes = await Pass.find(filter).sort({ createdAt: -1 });
+    if (status) filter.status = status;
+    if (rollNo) filter.rollNo = rollNo.trim();
+
+    // 1. COUNSELOR: Strictly sees ONLY their assigned counselling students
+    if (role === 'counselor' || counselorName) {
+      filter.counselorName = (counselorName || '').trim();
+    }
+
+    // 2. HOD: Strictly sees ONLY their department (all sections)
+    else if (role === 'hod' || (dept && !yearSec && role !== 'principal')) {
+      filter.dept = dept.toUpperCase().trim();
+    }
+
+    // 3. CLASS ADVISOR: Strictly matches BOTH department AND section
+    else if (role === 'advisor' || (dept && yearSec)) {
+      filter.dept = dept.toUpperCase().trim();
+    }
+
+    // 4. PRINCIPAL: No dept/section restrictions (sees entire college)
+
+    let passes = await Pass.find(filter).sort({ createdAt: -1 });
+
+    // Strict Section Filter for Class Advisors (Ensures CSE-A never sees CSE-B)
+    if (role === 'advisor' && yearSec) {
+      const targetSec = extractSection(yearSec);
+      passes = passes.filter(p => {
+        const studentSec = extractSection(p.yearSec);
+        return studentSec === targetSec;
+      });
+    }
+
     res.json(passes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Apply Pass
+// Student Apply
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
@@ -299,7 +336,7 @@ app.post('/api/approve/counselor', async (req, res) => {
   }
 });
 
-// Advisor Approval
+// Class Advisor Approval
 app.post('/api/approve/advisor', async (req, res) => {
   try {
     const { passId, advisorName, parentCalledFallback } = req.body;
