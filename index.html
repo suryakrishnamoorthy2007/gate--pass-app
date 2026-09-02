@@ -48,7 +48,7 @@
         <button onclick="requestUnlock('counselor', 'Counselor Portal', '2222')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-emerald-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">📋</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Counselor</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Parent Verification</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Roll Range</span>
         </button>
       </div>
 
@@ -129,6 +129,22 @@
         </div>
       </div>
 
+      <!-- COUNSELOR ROLL RANGE REGISTRATION (Shows only for Counselor during Register) -->
+      <div id="counselorRollRangeContainer" class="hidden p-3 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+        <label class="block text-[10px] font-bold text-emerald-900 uppercase">Assigned Counseling Student Roll Numbers</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[9px] font-bold text-slate-500 uppercase">Starting Roll No</label>
+            <input type="text" id="userStartRoll" placeholder="e.g. 110324104001" class="w-full px-2.5 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs font-mono focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[9px] font-bold text-slate-500 uppercase">Ending Roll No</label>
+            <input type="text" id="userEndRoll" placeholder="e.g. 110324104020" class="w-full px-2.5 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs font-mono focus:outline-none">
+          </div>
+        </div>
+        <p class="text-[9px] text-emerald-700 font-medium">Students within this range will route directly to your portal.</p>
+      </div>
+
       <div>
         <label id="userIdLabel" class="block text-xs font-bold text-slate-600 uppercase mb-1">Student Roll Number</label>
         <input type="text" id="userId" placeholder="Enter Roll Number" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none">
@@ -154,7 +170,7 @@
 
       <div class="flex items-center gap-3">
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-2">
-          <span>📥 Download Department/Section PDF</span>
+          <span>📥 Download Jurisdiction Records (PDF)</span>
         </button>
         <button onclick="logout()" class="px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-bold text-slate-600">Exit Dashboard</button>
       </div>
@@ -302,9 +318,12 @@
       const showAcademic = !login && (activeRole === 'counselor' || activeRole === 'advisor' || activeRole === 'hod');
       document.getElementById('academicDetails').classList.toggle('hidden', !showAcademic);
 
-      // Hide section for HOD (HOD manages all sections in that department)
       const isAdvisor = !login && activeRole === 'advisor';
       document.getElementById('sectionContainer').classList.toggle('hidden', !isAdvisor);
+
+      // Show Counselor Start-End Roll Range inputs only during Counselor registration
+      const isCounselorRegister = !login && activeRole === 'counselor';
+      document.getElementById('counselorRollRangeContainer').classList.toggle('hidden', !isCounselorRegister);
 
       document.getElementById('authSubmitBtn').innerText = login ? `Login as ${activeRole.toUpperCase()}` : `Register as ${activeRole.toUpperCase()}`;
     }
@@ -330,11 +349,17 @@
         const name = document.getElementById('userName').value.trim();
         const dept = document.getElementById('userDept')?.value || 'CSE';
         const yearSec = document.getElementById('userYearSec')?.value || 'A';
+        const startRoll = document.getElementById('userStartRoll')?.value.trim() || '';
+        const endRoll = document.getElementById('userEndRoll')?.value.trim() || '';
+
+        if (activeRole === 'counselor' && (!startRoll || !endRoll)) {
+          return alert('Please enter both Starting Roll Number and Ending Roll Number for your counseling batch.');
+        }
 
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, password, name, role: activeRole, dept, yearSec })
+          body: JSON.stringify({ userId, password, name, role: activeRole, dept, yearSec, startRoll, endRoll })
         });
         const data = await res.json();
         alert(data.message);
@@ -347,7 +372,6 @@
       document.getElementById('dashScreen').classList.remove('hidden');
       document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
 
-      // Dynamic Role Labels
       if (user.role === 'principal') {
         document.getElementById('dashRoleSubtitle').innerText = `EXECUTIVE CLEARANCE • College-Wide Administration (All Departments)`;
       } else if (user.role === 'hod') {
@@ -355,7 +379,7 @@
       } else if (user.role === 'advisor') {
         document.getElementById('dashRoleSubtitle').innerText = `CLASS ADVISOR • ${user.dept} - Section ${user.yearSec}`;
       } else if (user.role === 'counselor') {
-        document.getElementById('dashRoleSubtitle').innerText = `CLASS COUNSELOR • Assigned Ward Roster (${user.name})`;
+        document.getElementById('dashRoleSubtitle').innerText = `CLASS COUNSELOR • Assigned Range: ${user.startRoll || 'Start'} to ${user.endRoll || 'End'}`;
       } else {
         document.getElementById('dashRoleSubtitle').innerText = `STUDENT • Dept: ${user.dept || 'Engineering'}`;
       }
@@ -387,16 +411,21 @@
         if (user.role === 'counselor') {
           content.innerHTML = `
             <div class="space-y-6">
-              <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
+              <!-- Counselor Info & Range Card -->
+              <div class="bg-emerald-50/70 border border-emerald-200 rounded-3xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
                 <div>
-                  <h4 class="font-bold text-slate-800 text-sm">📥 Upload Student Master Excel</h4>
-                  <p class="text-xs text-slate-400">Assigned Ward Roster for Counselor: <span class="font-semibold text-blue-600">${user.name}</span></p>
+                  <h4 class="font-bold text-emerald-900 text-sm">Counselor Ward Jurisdiction</h4>
+                  <p class="text-xs text-emerald-700 mt-0.5">Assigned Students: <span class="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">${user.startRoll || 'Not Set'}</span> to <span class="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">${user.endRoll || 'Not Set'}</span></p>
                 </div>
-                <input type="file" id="counselorFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorExcel()" class="text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-500">Upload Excel Roster:</span>
+                  <input type="file" id="counselorFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorExcel()" class="text-xs">
+                </div>
               </div>
 
+              <!-- Pending Approval Queue -->
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Verification (Your Counselling Students Only)</h4>
+                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification</h4>
                 <div id="counselorQueue"></div>
               </div>
             </div>
@@ -452,7 +481,7 @@
       }
     }
 
-    // STUDENT VIEW
+    // STUDENT PERSONAL VIEW
     async function loadStudentPersonalStatus() {
       const tbody = document.getElementById('studentPersonalBody');
       if (!tbody || !loggedUser) return;
@@ -509,14 +538,14 @@
       } catch (err) {}
     }
 
-    // 1. COUNSELOR QUEUE: Strictly this Counselor's students only
+    // 1. COUNSELOR QUEUE: Matched by Start-to-End Roll range OR Counselor name
     async function fetchCounselorQueue() {
-      const res = await fetch(`/api/passes?status=Pending Counselor&role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}`);
+      const res = await fetch(`/api/passes?status=Pending Counselor&role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}&startRoll=${encodeURIComponent(loggedUser.startRoll || '')}&endRoll=${encodeURIComponent(loggedUser.endRoll || '')}`);
       const passes = await res.json();
       const el = document.getElementById('counselorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No students in your assigned counseling roster have pending passes.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes pending your verification in roll range ${loggedUser.startRoll || 'Start'} to ${loggedUser.endRoll || 'End'}.</div>`;
         return;
       }
 
@@ -580,7 +609,7 @@
       loadUniversalLogs();
     }
 
-    // 2. CLASS ADVISOR QUEUE: Strictly this Department & Section only (e.g. CSE-A)
+    // 2. CLASS ADVISOR QUEUE: Department & Section only (e.g. CSE-A)
     async function fetchAdvisorQueue() {
       const res = await fetch(`/api/passes?status=Pending Advisor&role=advisor&dept=${encodeURIComponent(loggedUser.dept)}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`);
       const passes = await res.json();
@@ -664,7 +693,7 @@
       loadUniversalLogs();
     }
 
-    // 3. HOD QUEUE: Strictly this Department only (all sections, e.g. CSE A + B)
+    // 3. HOD QUEUE: Department only (all sections)
     async function fetchHODQueue() {
       const res = await fetch(`/api/passes?status=Pending HOD&role=hod&dept=${encodeURIComponent(loggedUser.dept)}`);
       const passes = await res.json();
@@ -719,7 +748,7 @@
       `;
     }
 
-    // 4. PRINCIPAL QUEUE: College-wide (All departments, all sections)
+    // 4. PRINCIPAL QUEUE: College-wide
     async function fetchPrincipalQueue() {
       const el = document.getElementById('principalQueue');
       if (!el) return;
@@ -799,7 +828,7 @@
       openDashboard(loggedUser);
     }
 
-    // STRICTLY FILTERED LOGS TABLE FOR BOTTOM DASHBOARD
+    // STRICTLY SCOPED LOGS TABLE FOR BOTTOM DASHBOARD
     async function loadUniversalLogs() {
       const tbody = document.getElementById('universalLogsBody');
       if (!tbody || !loggedUser) return;
@@ -816,8 +845,8 @@
           logUrl += `role=advisor&dept=${encodeURIComponent(loggedUser.dept)}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
           document.getElementById('logsTitle').innerText = `${loggedUser.dept} - Section ${loggedUser.yearSec} Outpass Logs Only`;
         } else if (loggedUser.role === 'counselor') {
-          logUrl += `role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}`;
-          document.getElementById('logsTitle').innerText = `Outpass Logs for ${loggedUser.name}'s Counselling Ward Only`;
+          logUrl += `role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}&startRoll=${encodeURIComponent(loggedUser.startRoll || '')}&endRoll=${encodeURIComponent(loggedUser.endRoll || '')}`;
+          document.getElementById('logsTitle').innerText = `Outpass Logs for ${loggedUser.name} (${loggedUser.startRoll || 'Start'} to ${loggedUser.endRoll || 'End'})`;
         }
 
         const res = await fetch(logUrl);
@@ -897,7 +926,7 @@
       return `⏱️ ${m}m ${s}s left`;
     }
 
-    // TOP BULK PDF DOWNLOAD ENGINE (Strictly prints only authorized records)
+    // TOP BULK PDF DOWNLOAD ENGINE
     function downloadMasterPDF() {
       if (!masterPassList || masterPassList.length === 0) return alert('No pass records found in your jurisdiction to export.');
 
