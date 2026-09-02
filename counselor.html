@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GateMatrix • Counselor Verification Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Ambient Cyber Glows -->
+  <div class="fixed -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <div class="max-w-6xl w-full mx-auto space-y-6 relative z-10">
+
+    <!-- Top Navigation & Profile Header -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-2xl">
+            📋
+          </div>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">GateMatrix • Counselor Portal</h1>
+          <p class="text-xs text-emerald-400 font-mono">Tier-1 Student Verification & Parent Calling</p>
+        </div>
+      </div>
+
+      <!-- Counselor Batch Selector -->
+      <div class="flex flex-wrap items-center gap-3">
+        <select id="deptSelect" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 font-mono">
+          <option value="CSE">Dept: CSE</option>
+          <option value="ECE">Dept: ECE</option>
+          <option value="MECH">Dept: MECH</option>
+          <option value="IT">Dept: IT</option>
+          <option value="CIVIL">Dept: CIVIL</option>
+          <option value="AI&DS">Dept: AI&DS</option>
+        </select>
+
+        <select id="yearSelect" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 font-mono">
+          <option value="III">Year: III</option>
+          <option value="I">Year: I</option>
+          <option value="II">Year: II</option>
+          <option value="IV">Year: IV</option>
+        </select>
+
+        <select id="secSelect" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 font-mono">
+          <option value="A">Sec: A</option>
+          <option value="B">Sec: B</option>
+          <option value="C">Sec: C</option>
+        </select>
+
+        <select id="batchSelect" onchange="loadPendingPasses()" class="bg-slate-950 border border-emerald-500/50 text-xs text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none">
+          <option value="Batch 1 (1-20)">Batch 1 (Roll 1-20)</option>
+          <option value="Batch 2 (21-40)">Batch 2 (Roll 21-40)</option>
+          <option value="Batch 3 (41-60)">Batch 3 (Roll 41-60)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Batch Excel Upload Card -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+          📥 Upload Batch Excel (20 Students)
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Upload the student roster for your assigned 20-student batch</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <input type="text" id="counselorNameInput" placeholder="Counselor Name (e.g. Dr. Kumar)" class="bg-slate-950 border border-slate-700 text-xs text-white rounded-xl px-3 py-2 w-48 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+        <label class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow flex items-center gap-2">
+          <span>Choose & Upload Excel</span>
+          <input type="file" id="batchExcelFile" accept=".xlsx, .xls, .csv" class="hidden" onchange="uploadCounselorBatch()">
+        </label>
+      </div>
+    </div>
+
+    <!-- Active Requests Queue -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-white">Pending Leave Requests for Your Batch</h2>
+          <p class="text-xs text-slate-400">Call parent to confirm before forwarding to Class Advisor</p>
+        </div>
+        <button onclick="loadPendingPasses()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-mono transition">
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+            <tr>
+              <th class="px-5 py-3.5">Roll No</th>
+              <th class="px-5 py-3.5">Student Name</th>
+              <th class="px-5 py-3.5">Reason</th>
+              <th class="px-5 py-3.5">Parent Contact</th>
+              <th class="px-5 py-3.5">Parent Verification</th>
+              <th class="px-5 py-3.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="counselorTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-500 font-mono">Loading pending passes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Developer Footer -->
+  <footer class="text-center text-[11px] text-slate-600 py-6 relative z-10">
+    <p>GateMatrix Institutional Engine • Developed by <span class="text-emerald-400 font-semibold">Surya</span></p>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => {
+      loadPendingPasses();
+    });
+
+    async function uploadCounselorBatch() {
+      const fileInput = document.getElementById('batchExcelFile');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const dept = document.getElementById('deptSelect').value;
+      const year = document.getElementById('yearSelect').value;
+      const sec = document.getElementById('secSelect').value;
+      const batch = document.getElementById('batchSelect').value;
+      const counselorName = document.getElementById('counselorNameInput').value.trim() || 'Assigned Counselor';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('dept', dept);
+      formData.append('year', year);
+      formData.append('sec', sec);
+      formData.append('batch', batch);
+      formData.append('counselorName', counselorName);
+
+      try {
+        const res = await fetch('/api/upload-students', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        alert(data.message || 'Upload complete!');
+        fileInput.value = '';
+        loadPendingPasses();
+      } catch (err) {
+        alert('Failed to upload batch Excel file.');
+      }
+    }
+
+    async function loadPendingPasses() {
+      const dept = document.getElementById('deptSelect').value;
+      const year = document.getElementById('yearSelect').value;
+      const sec = document.getElementById('secSelect').value;
+      const batch = document.getElementById('batchSelect').value;
+
+      const tbody = document.getElementById('counselorTableBody');
+
+      try {
+        const url = `/api/passes?status=Pending Counselor&dept=${encodeURIComponent(dept)}&year=${encodeURIComponent(year)}&sec=${encodeURIComponent(sec)}&batch=${encodeURIComponent(batch)}`;
+        const res = await fetch(url);
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500">No pending leave applications for ${batch}.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-5 py-4 font-mono font-bold text-emerald-400">${p.rollNo}</td>
+            <td class="px-5 py-4 font-semibold text-white">${p.name}</td>
+            <td class="px-5 py-4 text-slate-300 max-w-xs truncate">${p.reason}</td>
+            <td class="px-5 py-4 font-mono text-slate-300">
+              ${p.parentContact !== '-' ? `
+                <a href="tel:${p.parentContact}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 font-bold">
+                  📞 ${p.parentContact}
+                </a>
+              ` : '<span class="text-slate-500">No number</span>'}
+            </td>
+            <td class="px-5 py-4">
+              <label class="inline-flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="callCheck_${p._id}" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0">
+                <span class="text-xs text-slate-400">Parent Verified</span>
+              </label>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button 
+                onclick="verifyPass('${p._id}')" 
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow transition active:scale-95 whitespace-nowrap"
+              >
+                Verify & Forward ➔
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-400">Error loading passes.</td></tr>`;
+      }
+    }
+
+    async function verifyPass(passId) {
+      const parentChecked = document.getElementById(`callCheck_${passId}`)?.checked;
+      const counselorName = document.getElementById('counselorNameInput').value.trim() || 'Assigned Counselor';
+
+      if (!parentChecked) {
+        const proceed = confirm("Parent verification box is unchecked. Did you speak with the parents?");
+        if (!proceed) return;
+      }
+
+      try {
+        const res = await fetch('/api/approve/counselor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passId, parentCalled: !!parentChecked, counselorName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Pass verified and forwarded to Class Advisor!');
+          loadPendingPasses();
+        } else {
+          alert(data.message || 'Verification failed');
+        }
+      } catch (err) {
+        alert('Server communication error.');
+      }
+    }
+
+    // Auto-refresh every 6 seconds
+    setInterval(loadPendingPasses, 6000);
+  </script>
+</body>
+</html>
