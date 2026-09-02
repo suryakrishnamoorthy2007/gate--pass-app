@@ -6,28 +6,28 @@
   <title>GateMatrix • Institutional Access Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-  </style>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between p-4 md:p-8 selection:bg-blue-500 selection:text-white">
+  
+  <!-- PDF Generation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- Light Ambient Background -->
-  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-blue-100/60 to-transparent -z-10 pointer-events-none"></div>
+  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between p-4 md:p-8">
 
   <!-- Header -->
-  <header class="max-w-5xl w-full mx-auto flex flex-wrap items-center justify-between pb-6 border-b border-slate-200 gap-4">
+  <header class="max-w-6xl w-full mx-auto flex flex-wrap items-center justify-between pb-6 border-b border-slate-200 gap-4">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/20">
         GM
       </div>
       <div>
         <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">GateMatrix</h1>
-        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Institutional Clearance Architecture</p>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Campus Clearance & Parent Verification Grid</p>
       </div>
     </div>
     <div class="text-right text-xs text-slate-500 font-medium">
-      Academic Portal • Authorized Access Only
+      Institutional Authority Portal
     </div>
   </header>
 
@@ -35,32 +35,29 @@
   <main id="portalSelectionScreen" class="max-w-4xl w-full mx-auto my-auto py-10">
     <div class="text-center mb-10 space-y-2">
       <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Select Institutional Authority</h2>
-      <p class="text-sm text-slate-500 max-w-md mx-auto">Each portal requires an authorized security unlock PIN before login/registration.</p>
+      <p class="text-sm text-slate-500 max-w-md mx-auto">Click your authority portal and enter your PIN code to access.</p>
     </div>
 
-    <!-- Circles Layout Map -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-3xl mx-auto">
       
       <!-- Left Column -->
       <div class="space-y-6 flex flex-col items-center">
-        <!-- 1. Student -->
-        <button onclick="requestUnlock('student', 'Student Portal', '1111')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl transition-all duration-300 active:scale-95">
+        <button onclick="requestUnlock('student', 'Student Portal', '1111')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">👨‍🎓</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-blue-600">Student</span>
           <span class="text-[10px] text-slate-400 font-mono mt-0.5">PIN: 1111</span>
         </button>
 
-        <!-- 2. Counselor -->
-        <button onclick="requestUnlock('counselor', 'Counselor Portal', '2222')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-emerald-500 shadow-md hover:shadow-xl transition-all duration-300 active:scale-95">
+        <button onclick="requestUnlock('counselor', 'Counselor Portal', '2222')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-emerald-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">📋</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Counselor</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Assigned Batch</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Parent Verification</span>
         </button>
       </div>
 
       <!-- Center Hub -->
       <div class="flex flex-col items-center">
-        <button onclick="requestUnlock('principal', 'Principal / Admin Office', '5555')" class="group relative flex flex-col items-center justify-center w-48 h-48 rounded-full bg-gradient-to-b from-white to-blue-50/50 border-4 border-blue-600 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95">
+        <button onclick="requestUnlock('principal', 'Principal / Admin Office', '5555')" class="group relative flex flex-col items-center justify-center w-48 h-48 rounded-full bg-gradient-to-b from-white to-blue-50/50 border-4 border-blue-600 shadow-xl hover:shadow-2xl hover:scale-105 transition duration-300 active:scale-95">
           <span class="absolute -top-3 bg-blue-600 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow">Executive</span>
           <span class="text-4xl mb-1 group-hover:scale-110 transition">🏛️</span>
           <span class="text-sm font-extrabold text-slate-900 group-hover:text-blue-600 text-center px-4">Principal / Admin</span>
@@ -70,18 +67,16 @@
 
       <!-- Right Column -->
       <div class="space-y-6 flex flex-col items-center">
-        <!-- 3. Class Advisor -->
-        <button onclick="requestUnlock('advisor', 'Class Advisor Portal', '3333')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-500 shadow-md hover:shadow-xl transition-all duration-300 active:scale-95">
+        <button onclick="requestUnlock('advisor', 'Class Advisor Portal', '3333')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">🧑‍🏫</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Class Advisor</span>
           <span class="text-[10px] text-slate-400 font-mono mt-0.5">Class Oversight</span>
         </button>
 
-        <!-- 4. HOD -->
-        <button onclick="requestUnlock('hod', 'Head of Dept (HOD)', '4444')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-purple-500 shadow-md hover:shadow-xl transition-all duration-300 active:scale-95">
+        <button onclick="requestUnlock('hod', 'Head of Dept (HOD)', '4444')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-purple-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">🎓</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-purple-600">HOD</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Dept Approval</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Dept Authorization</span>
         </button>
       </div>
 
@@ -91,25 +86,15 @@
   <!-- PIN UNLOCK MODAL -->
   <div id="unlockModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-5">
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-bold">
-        🔒
-      </div>
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-bold">🔒</div>
       <div>
         <h3 id="unlockModalTitle" class="text-lg font-bold text-slate-900">Portal Security Verification</h3>
-        <p class="text-xs text-slate-500 mt-1">Enter authorized PIN to proceed.</p>
+        <p class="text-xs text-slate-500 mt-1">Enter your 4-digit security PIN</p>
       </div>
-
-      <input 
-        type="password" 
-        id="unlockCodeInput" 
-        placeholder="Enter 4-Digit PIN" 
-        maxlength="6"
-        class="w-full text-center text-xl tracking-widest font-mono py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white transition"
-      >
-
+      <input type="password" id="unlockCodeInput" placeholder="Enter PIN" maxlength="6" class="w-full text-center text-xl tracking-widest font-mono py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500">
       <div class="flex gap-2">
-        <button onclick="closeUnlockModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 transition">Cancel</button>
-        <button onclick="verifyUnlockCode()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition">Unlock</button>
+        <button onclick="closeUnlockModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600">Cancel</button>
+        <button onclick="verifyUnlockCode()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Unlock</button>
       </div>
     </div>
   </div>
@@ -117,95 +102,106 @@
   <!-- SCREEN 2: LOGIN / REGISTER -->
   <div id="authScreen" class="hidden max-w-md w-full mx-auto my-auto space-y-6">
     <div class="flex items-center justify-between">
-      <button onclick="backToPortals()" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
-        ← Choose Another Role
-      </button>
-      <span id="activeRoleBadge" class="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider"></span>
+      <button onclick="backToPortals()" class="text-xs font-bold text-blue-600 hover:underline">← Change Role</button>
+      <span id="activeRoleBadge" class="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold uppercase"></span>
     </div>
 
-    <!-- Toggle Login vs Register -->
     <div class="flex bg-slate-200/80 p-1 rounded-2xl">
-      <button onclick="toggleAuth(true)" id="tabLogin" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm transition">Login</button>
-      <button onclick="toggleAuth(false)" id="tabRegister" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900 transition">First Time? Register</button>
+      <button onclick="toggleAuth(true)" id="tabLogin" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm">Login</button>
+      <button onclick="toggleAuth(false)" id="tabRegister" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900">Register</button>
     </div>
 
-    <!-- Auth Card -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
-      
-      <!-- Full Name (Register Only) -->
       <div id="nameField" class="hidden">
         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Full Name</label>
-        <input type="text" id="userName" placeholder="Enter Full Name" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+        <input type="text" id="userName" placeholder="Your Name" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
       </div>
 
-      <!-- Dept / Year / Sec for Student, Counselor & Advisor -->
       <div id="academicDetails" class="hidden grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Department</label>
-          <select id="userDept" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="MECH">MECH</option>
-            <option value="IT">IT</option>
-            <option value="CIVIL">CIVIL</option>
-            <option value="AI&DS">AI&DS</option>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Dept</label>
+          <select id="userDept" class="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <option value="CSE">CSE</option><option value="ECE">ECE</option><option value="MECH">MECH</option><option value="IT">IT</option><option value="CIVIL">CIVIL</option><option value="AI&DS">AI&DS</option>
           </select>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Year & Section</label>
-          <input type="text" id="userYearSec" placeholder="e.g. III-A, II-B" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Year & Sec</label>
+          <input type="text" id="userYearSec" placeholder="e.g. III-A" class="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
         </div>
       </div>
 
-      <!-- Counselor Custom Range Input (Shows ONLY for Counselor registration) -->
       <div id="counselorBatchContainer" class="hidden">
-        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Your Counselor Batch / Roll Range</label>
-        <input type="text" id="userBatch" placeholder="e.g. 110324104001 - 110324104020 or Batch 1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500">
-        <p class="text-[10px] text-slate-400 mt-1">Specify your assigned 20-student roll number sequence.</p>
+        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Batch / Roll Range</label>
+        <input type="text" id="userBatch" placeholder="e.g. 110324104001 - 110324104020 or Batch 1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
       </div>
 
-      <!-- Single Clear Identifier: Switches to "Student Roll Number" or "Staff ID" -->
       <div>
         <label id="userIdLabel" class="block text-xs font-bold text-slate-600 uppercase mb-1">Student Roll Number</label>
-        <input type="text" id="userId" placeholder="Enter Roll Number" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500">
+        <input type="text" id="userId" placeholder="Enter Roll Number" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none">
       </div>
 
-      <!-- Password -->
       <div>
         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Password</label>
-        <input type="password" id="userPass" placeholder="••••••••" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+        <input type="password" id="userPass" placeholder="••••••••" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
       </div>
 
-      <button onclick="handleAuthSubmit()" id="authSubmitBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition">
-        Login
-      </button>
+      <button onclick="handleAuthSubmit()" id="authSubmitBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow">Login</button>
     </div>
   </div>
 
-  <!-- SCREEN 3: WORKING DASHBOARD -->
-  <div id="dashScreen" class="hidden max-w-5xl w-full mx-auto my-auto space-y-6">
+  <!-- SCREEN 3: WORKING DASHBOARDS -->
+  <div id="dashScreen" class="hidden max-w-6xl w-full mx-auto my-auto space-y-6">
     <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex items-center justify-between">
       <div>
         <h3 id="dashGreeting" class="text-base font-bold text-slate-900">Welcome</h3>
         <p id="dashRoleSubtitle" class="text-xs text-blue-600 font-semibold"></p>
       </div>
-      <button onclick="logout()" class="px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-bold text-slate-600 transition">
-        Exit Dashboard
-      </button>
+      <button onclick="logout()" class="px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-bold text-slate-600">Exit Dashboard</button>
     </div>
 
+    <!-- Dynamic Role Actions Container -->
     <div id="roleDashboardContent"></div>
+
+    <!-- UNIVERSAL GATE EXIT TRACKER WITH PDF DOWNLOAD -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+        <div>
+          <h4 class="font-bold text-slate-900 text-sm">Gate Movement & Institutional Records</h4>
+          <p class="text-xs text-slate-400">Download authorized PDF slips and monitor real-time campus exits</p>
+        </div>
+        <button onclick="loadUniversalLogs()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">🔄 Refresh</button>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">Roll No</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Class</th>
+              <th class="p-3">Parent Verification</th>
+              <th class="p-3">Gate Exit Status</th>
+              <th class="p-3">Exit Date & Time</th>
+              <th class="p-3 text-right">Official Document</th>
+            </tr>
+          </thead>
+          <tbody id="universalLogsBody" class="divide-y divide-slate-100">
+            <tr><td colspan="7" class="p-4 text-center text-slate-400">Loading records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="max-w-5xl w-full mx-auto text-center pt-6 border-t border-slate-200 text-xs text-slate-500">
-    GateMatrix Institutional Security Network • Developed by <span class="text-blue-600 font-bold">Surya</span>
+  <footer class="max-w-6xl w-full mx-auto text-center pt-6 border-t border-slate-200 text-xs text-slate-500">
+    GateMatrix Institutional Security Grid • Developed by <span class="text-blue-600 font-bold">Surya</span>
   </footer>
 
   <script>
     let activeRole = '';
     let requiredPin = '';
     let isLoginMode = true;
+    let loggedUser = null;
 
     function requestUnlock(role, title, pin) {
       activeRole = role;
@@ -221,12 +217,11 @@
     }
 
     function verifyUnlockCode() {
-      const enteredPin = document.getElementById('unlockCodeInput').value.trim();
-      if (enteredPin === requiredPin) {
+      if (document.getElementById('unlockCodeInput').value.trim() === requiredPin) {
         closeUnlockModal();
         openAuthScreen();
       } else {
-        alert('❌ Invalid Access Code for this Authority Portal!');
+        alert('❌ Invalid Access Code!');
       }
     }
 
@@ -234,18 +229,16 @@
       document.getElementById('portalSelectionScreen').classList.add('hidden');
       document.getElementById('authScreen').classList.remove('hidden');
       document.getElementById('activeRoleBadge').innerText = activeRole.toUpperCase();
-      
-      // Dynamic Labeling: Student vs Staff
+
       const idLabel = document.getElementById('userIdLabel');
       const idInput = document.getElementById('userId');
       if (activeRole === 'student') {
         idLabel.innerText = 'Student Roll Number';
         idInput.placeholder = 'e.g. 110324104070';
       } else {
-        idLabel.innerText = 'Staff / Faculty ID';
-        idInput.placeholder = 'e.g. STAFF102 or Email';
+        idLabel.innerText = 'Faculty / Staff ID';
+        idInput.placeholder = 'e.g. STAFF01';
       }
-
       toggleAuth(true);
     }
 
@@ -256,18 +249,15 @@
 
     function toggleAuth(login) {
       isLoginMode = login;
-      document.getElementById('tabLogin').className = login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900 transition';
-      document.getElementById('tabRegister').className = !login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900 transition';
+      document.getElementById('tabLogin').className = login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900';
+      document.getElementById('tabRegister').className = !login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900';
       
       document.getElementById('nameField').classList.toggle('hidden', login);
-      
-      // Academic details shown only during registration for student, counselor, advisor
-      const showAcademic = !login && (activeRole === 'student' || activeRole === 'counselor' || activeRole === 'advisor');
+      const showAcademic = !login && (activeRole === 'counselor' || activeRole === 'advisor');
       document.getElementById('academicDetails').classList.toggle('hidden', !showAcademic);
 
-      // Counselor batch input shown ONLY for Counselor registration
-      const showCounselorBatch = !login && (activeRole === 'counselor');
-      document.getElementById('counselorBatchContainer').classList.toggle('hidden', !showCounselorBatch);
+      const showBatch = !login && (activeRole === 'counselor');
+      document.getElementById('counselorBatchContainer').classList.toggle('hidden', !showBatch);
 
       document.getElementById('authSubmitBtn').innerText = login ? `Login as ${activeRole.toUpperCase()}` : `Register as ${activeRole.toUpperCase()}`;
     }
@@ -275,8 +265,7 @@
     async function handleAuthSubmit() {
       const userId = document.getElementById('userId').value.trim();
       const password = document.getElementById('userPass').value.trim();
-
-      if (!userId || !password) return alert('Please enter your ID and password.');
+      if (!userId || !password) return alert('Enter ID and password.');
 
       if (isLoginMode) {
         const res = await fetch('/api/auth/login', {
@@ -286,13 +275,10 @@
         });
         const data = await res.json();
         if (data.success) {
-          if (data.user.role !== activeRole) {
-            return alert(`This account is registered as ${data.user.role.toUpperCase()}, not ${activeRole.toUpperCase()}.`);
-          }
+          if (data.user.role !== activeRole) return alert(`This account belongs to ${data.user.role}, not ${activeRole}.`);
+          loggedUser = data.user;
           openDashboard(data.user);
-        } else {
-          alert(data.message);
-        }
+        } else alert(data.message);
       } else {
         const name = document.getElementById('userName').value.trim();
         const dept = document.getElementById('userDept')?.value || 'CSE';
@@ -314,56 +300,95 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('dashScreen').classList.remove('hidden');
       document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
-      document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} Dashboard • ${user.dept || 'Main Campus'}`;
+      document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} • Dept: ${user.dept || 'Engineering'}`;
 
       const content = document.getElementById('roleDashboardContent');
 
-      // 1. STUDENT
+      // 1. STUDENT VIEW
       if (user.role === 'student') {
         content.innerHTML = `
           <div class="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm max-w-lg mx-auto">
-            <h4 class="font-bold text-slate-800 text-sm">Submit Outpass / Leave Request</h4>
-            <textarea id="leaveReason" rows="3" placeholder="Enter reason for leave..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"></textarea>
-            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow">Submit to Counselor</button>
+            <h4 class="font-bold text-slate-800 text-sm">Apply for Outpass / Leave</h4>
+            <textarea id="passReason" rows="3" placeholder="Reason for outpass..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"></textarea>
+            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs">Submit to Counselor</button>
           </div>
         `;
       }
-      // 2. COUNSELOR
+      // 2. COUNSELOR VIEW
       else if (user.role === 'counselor') {
         content.innerHTML = `
           <div class="space-y-6">
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
               <div>
-                <h4 class="font-bold text-slate-800 text-sm">Upload Student Roster</h4>
-                <p class="text-xs text-slate-500 font-mono">${user.batch || 'Assigned Batch'}</p>
+                <h4 class="font-bold text-slate-800 text-sm">📥 Upload Student Excel with Parent Numbers</h4>
+                <p class="text-xs text-slate-400">Batch: <span class="font-semibold text-blue-600">${user.batch}</span></p>
               </div>
-              <input type="file" accept=".xlsx,.xls,.csv" onchange="uploadCounselorFile('${user.dept}', '${user.batch}', '${user.name}')" class="text-xs">
+              <input type="file" id="counselorFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorExcel()" class="text-xs">
             </div>
-            <div id="counselorQueue"></div>
+
+            <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+              <h4 class="font-bold text-slate-800 text-sm">Pending Verification Queue (Call Parents)</h4>
+              <div id="counselorQueue"></div>
+            </div>
           </div>
         `;
-        fetchRoleQueue('Pending Counselor', 'counselorQueue', '/api/approve/counselor');
+        fetchCounselorQueue();
       }
-      // 3. ADVISOR
+      // 3. ADVISOR VIEW
       else if (user.role === 'advisor') {
-        content.innerHTML = `<div id="advisorQueue"></div>`;
-        fetchRoleQueue('Pending Advisor', 'advisorQueue', '/api/approve/advisor');
+        content.innerHTML = `
+          <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+            <h4 class="font-bold text-slate-800 text-sm">Class Advisor Review Queue</h4>
+            <div id="advisorQueue"></div>
+          </div>
+        `;
+        fetchHierarchyQueue('Pending Advisor', 'advisorQueue', '/api/approve/advisor', 'Approve ➔ HOD');
       }
-      // 4. HOD
+      // 4. HOD VIEW
       else if (user.role === 'hod') {
-        content.innerHTML = `<div id="hodQueue"></div>`;
-        fetchRoleQueue('Pending HOD', 'hodQueue', '/api/approve/hod');
+        content.innerHTML = `
+          <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+            <h4 class="font-bold text-slate-800 text-sm">Department HOD Review Queue</h4>
+            <div id="hodQueue"></div>
+          </div>
+        `;
+        fetchHierarchyQueue('Pending HOD', 'hodQueue', '/api/approve/hod', 'Authorize ➔ Principal');
       }
-      // 5. PRINCIPAL
+      // 5. PRINCIPAL VIEW
       else if (user.role === 'principal') {
-        content.innerHTML = `<div id="principalQueue"></div>`;
-        fetchRoleQueue('Pending Principal', 'principalQueue', '/api/approve/principal');
+        content.innerHTML = `
+          <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+            <h4 class="font-bold text-slate-800 text-sm">Principal Final Clearance (Activates 20-Min Gate Pass)</h4>
+            <div id="principalQueue"></div>
+          </div>
+        `;
+        fetchHierarchyQueue('Pending Principal', 'principalQueue', '/api/approve/principal', 'Grant Exit Clearance ➔');
       }
+
+      loadUniversalLogs();
+    }
+
+    async function uploadCounselorExcel() {
+      const file = document.getElementById('counselorFile').files[0];
+      if (!file) return;
+
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('dept', loggedUser.dept);
+      fd.append('yearSec', loggedUser.yearSec);
+      fd.append('batch', loggedUser.batch);
+      fd.append('counselorName', loggedUser.name);
+
+      const res = await fetch('/api/upload-students', { method: 'POST', body: fd });
+      const data = await res.json();
+      alert(data.message);
+      document.getElementById('counselorFile').value = '';
     }
 
     async function submitStudentPass(rollNo) {
-      const reason = document.getElementById('leaveReason').value.trim();
+      const reason = document.getElementById('passReason').value.trim();
       if (!reason) return alert('Enter reason');
+
       const res = await fetch('/api/apply-pass', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -371,65 +396,296 @@
       });
       const data = await res.json();
       alert(data.message);
-      if (data.success) document.getElementById('leaveReason').value = '';
+      if (data.success) {
+        document.getElementById('passReason').value = '';
+        loadUniversalLogs();
+      }
     }
 
-    async function fetchRoleQueue(status, containerId, approveEndpoint) {
-      const res = await fetch(`/api/passes?status=${encodeURIComponent(status)}`);
+    async function fetchCounselorQueue() {
+      const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}`);
       const passes = await res.json();
-      const el = document.getElementById(containerId);
+      const el = document.getElementById('counselorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="bg-white p-8 rounded-3xl border border-slate-200 text-center text-xs text-slate-400 font-medium">No pending requests in your queue.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes pending your verification.</div>`;
         return;
       }
 
       el.innerHTML = `
-        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200 font-bold text-slate-600">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">Roll No</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Reason</th>
+              <th class="p-3">Parent Contact</th>
+              <th class="p-3">Call Confirmation</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${passes.map(p => `
               <tr>
-                <th class="p-4">Roll No</th>
-                <th class="p-4">Student</th>
-                <th class="p-4">Reason</th>
-                <th class="p-4">Parent Phone</th>
-                <th class="p-4 text-right">Action</th>
+                <td class="p-3 font-mono font-bold text-blue-600">${p.rollNo}</td>
+                <td class="p-3 font-semibold text-slate-800">${p.name}</td>
+                <td class="p-3 text-slate-600">${p.reason}</td>
+                <td class="p-3">
+                  <a href="tel:${p.parentContact}" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold hover:bg-emerald-100">
+                    📞 ${p.parentContact}
+                  </a>
+                </td>
+                <td class="p-3">
+                  <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="callCheck_${p._id}" class="w-4 h-4 rounded text-blue-600">
+                    <span class="text-[11px] font-semibold text-slate-700">Parent Approved</span>
+                  </label>
+                </td>
+                <td class="p-3 text-right">
+                  <button onclick="verifyCounselorPass('${p._id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
+                    Confirm & Forward ➔
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              ${passes.map(p => `
-                <tr>
-                  <td class="p-4 font-mono font-bold text-blue-600">${p.rollNo}</td>
-                  <td class="p-4 font-semibold text-slate-800">${p.name}</td>
-                  <td class="p-4 text-slate-600">${p.reason}</td>
-                  <td class="p-4 font-mono">${p.parentContact || '-'}</td>
-                  <td class="p-4 text-right">
-                    <button onclick="approvePass('${p._id}', '${approveEndpoint}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
-                      Approve & Forward ➔
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+            `).join('')}
+          </tbody>
+        </table>
       `;
     }
 
-    async function approvePass(passId, endpoint) {
-      const res = await fetch(endpoint, {
+    async function verifyCounselorPass(passId) {
+      const isCalled = document.getElementById(`callCheck_${passId}`)?.checked;
+      if (!isCalled) {
+        const proceed = confirm("Did you call the parents to verify this outpass?");
+        if (!proceed) return;
+      }
+
+      const res = await fetch('/api/approve/counselor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passId, parentCalled: true })
+        body: JSON.stringify({ passId, parentCalled: !!isCalled, counselorName: loggedUser.name })
       });
       const data = await res.json();
       alert(data.message);
-      location.reload();
+      fetchCounselorQueue();
+      loadUniversalLogs();
+    }
+
+    async function fetchHierarchyQueue(status, containerId, endpoint, btnText) {
+      const res = await fetch(`/api/passes?status=${encodeURIComponent(status)}&dept=${encodeURIComponent(loggedUser.dept)}`);
+      const passes = await res.json();
+      const el = document.getElementById(containerId);
+
+      if (!passes || passes.length === 0) {
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending in this stage.</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">Roll No</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Reason</th>
+              <th class="p-3">Parent Phone Verification</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${passes.map(p => `
+              <tr>
+                <td class="p-3 font-mono font-bold text-blue-600">${p.rollNo}</td>
+                <td class="p-3 font-semibold text-slate-800">${p.name}</td>
+                <td class="p-3 text-slate-600">${p.reason}</td>
+                <td class="p-3">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                    p.counselorApproval?.parentCalled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }">
+                    ${p.counselorApproval?.parentCalled ? '✓ Parent Confirmed by Phone Call' : '⚠️ Unverified Call'}
+                  </span>
+                </td>
+                <td class="p-3 text-right">
+                  <button onclick="approveGenericPass('${p._id}', '${endpoint}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
+                    ${btnText}
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function approveGenericPass(passId, endpoint) {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passId })
+      });
+      const data = await res.json();
+      alert(data.message);
+      openDashboard(loggedUser);
+    }
+
+    // UNIVERSAL GATE LOGS WITH PDF DOWNLOAD
+    async function loadUniversalLogs() {
+      const tbody = document.getElementById('universalLogsBody');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/passes');
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No pass logs available.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3 font-mono font-bold text-blue-600">${p.rollNo}</td>
+            <td class="p-3 font-semibold text-slate-800">${p.name}</td>
+            <td class="p-3 text-slate-500">${p.dept} ${p.yearSec || ''}</td>
+            <td class="p-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                p.counselorApproval?.parentCalled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'
+              }">
+                ${p.counselorApproval?.parentCalled ? '✓ Parent Confirmed' : 'Pending'}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                p.exitStatus === 'Exited Campus' 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : 'bg-amber-100 text-amber-800 border border-amber-300'
+              }">
+                ${p.exitStatus === 'Exited Campus' ? '🚪 EXITED CAMPUS' : '🏫 INSIDE CAMPUS / NOT EXITED'}
+              </span>
+            </td>
+            <td class="p-3 font-mono font-bold ${p.exitStatus === 'Exited Campus' ? 'text-emerald-700' : 'text-slate-400'}">
+              ${p.exitTime !== '-' ? p.exitTime : 'Not Exited Yet'}
+            </td>
+            <td class="p-3 text-right">
+              <button onclick='downloadPassPDF(${JSON.stringify(p)})' class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition shadow-sm active:scale-95">
+                📥 Download PDF
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {}
+    }
+
+    // PDF GENERATION ENGINE
+    function downloadPassPDF(pass) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // Clean Outer Border
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(1);
+      doc.rect(10, 10, 190, 277);
+
+      // Header Banner
+      doc.setFillColor(37, 99, 235);
+      doc.rect(10, 10, 190, 28, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text("GATEMATRIX CLEARANCE NETWORK", 105, 22, { align: "center" });
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text("OFFICIAL INSTITUTIONAL GATE OUTPASS & CLEARANCE SLIP", 105, 29, { align: "center" });
+
+      // Student Information Table
+      doc.autoTable({
+        startY: 44,
+        margin: { left: 15, right: 15 },
+        head: [['STUDENT INFORMATION', 'RECORD DETAILS']],
+        body: [
+          ['Student Roll / Reg No', pass.rollNo || '-'],
+          ['Full Name', pass.name || 'Student'],
+          ['Department & Class', `${pass.dept || 'Engineering'} - ${pass.yearSec || '-'}`],
+          ['Assigned Batch', pass.batch || 'Batch 1'],
+          ['Parent Contact Number', pass.parentContact || '-'],
+          ['Outpass Category / Reason', pass.reason || 'General Outpass']
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 3.5 }
+      });
+
+      // Verification & Clearance Audit Trail
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 8,
+        margin: { left: 15, right: 15 },
+        head: [['CLEARANCE GOVERNANCE TIER', 'STATUS / REMARKS']],
+        body: [
+          [
+            'Tier 1: Counselor Parent Call', 
+            pass.counselorApproval?.parentCalled 
+              ? `VERIFIED (Parent Confirmed by Phone Call at ${pass.counselorApproval?.time || '-'})` 
+              : 'Pending / Unverified'
+          ],
+          ['Tier 2: Class Advisor Approval', pass.advisorApproval?.approved ? `AUTHORIZED (${pass.advisorApproval?.time || '-'})` : 'Pending'],
+          ['Tier 3: HOD Authorization', pass.hodApproval?.approved ? `AUTHORIZED (${pass.hodApproval?.time || '-'})` : 'Pending'],
+          ['Tier 4: Principal Exit Clearance', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime || '-'})` : 'Pending']
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 9.5, cellPadding: 3.5 }
+      });
+
+      // Physical Gate Movement Log Table
+      const isExited = pass.exitStatus === 'Exited Campus';
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 8,
+        margin: { left: 15, right: 15 },
+        head: [['PHYSICAL MAIN GATE LOG', 'MOVEMENT RECORD']],
+        body: [
+          ['Exit Status', isExited ? 'EXITED CAMPUS (Verified at Gate)' : 'INSIDE CAMPUS / NOT EXITED'],
+          ['Official Exit Date & Time', pass.exitTime !== '-' ? pass.exitTime : 'Awaiting Physical Gate Scan'],
+          ['Pass Validity', pass.status === 'Approved' ? 'Active 20-Minute Departure Window' : pass.status]
+        ],
+        theme: 'plain',
+        headStyles: { fillColor: isExited ? [16, 185, 129] : [245, 158, 11], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 4 }
+      });
+
+      // Signature Footers
+      const finalY = doc.lastAutoTable.finalY + 28;
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+
+      doc.text("Class Counselor", 25, finalY);
+      doc.text("Class Advisor", 75, finalY);
+      doc.text("HOD", 125, finalY);
+      doc.text("Principal / Gate Security", 160, finalY);
+
+      doc.setDrawColor(148, 163, 184);
+      doc.line(20, finalY - 4, 55, finalY - 4);
+      doc.line(70, finalY - 4, 105, finalY - 4);
+      doc.line(120, finalY - 4, 145, finalY - 4);
+      doc.line(155, finalY - 4, 195, finalY - 4);
+
+      // Footer notice
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(148, 163, 184);
+      doc.text("Generated by GateMatrix Institutional Grid • Verified Electronic Access Document", 105, 280, { align: "center" });
+
+      doc.save(`GatePass_${pass.rollNo}.pdf`);
     }
 
     function logout() {
+      loggedUser = null;
       location.reload();
     }
+
+    setInterval(loadUniversalLogs, 8000);
   </script>
 </body>
 </html>
