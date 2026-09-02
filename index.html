@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GateMatrix • Institutional Access Network</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8 selection:bg-emerald-500 selection:text-black">
+
+  <!-- Splash Screen -->
+  <div id="splashScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between py-12 px-4 transition-all duration-700">
+    <div></div>
+    <div class="text-center space-y-4 animate-pulse">
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-[0_0_35px_rgba(16,185,129,0.4)] flex items-center justify-center">
+        <div class="w-full h-full bg-slate-900 rounded-[22px] flex items-center justify-center text-4xl">🛡️</div>
+      </div>
+      <h1 class="text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-teal-300 uppercase">GateMatrix</h1>
+      <p class="text-xs font-mono text-emerald-400 tracking-widest uppercase">Autonomous Campus Security Grid</p>
+    </div>
+    <p class="text-xs text-slate-500 font-mono">Developed by <span class="text-emerald-400 font-bold">Surya</span></p>
+  </div>
+
+  <!-- AUTH SECTION (Login / Register) -->
+  <div id="authSection" class="max-w-md w-full mx-auto my-auto relative z-10 space-y-6">
+    <div class="text-center space-y-2">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-lg flex items-center justify-center">
+        <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-3xl">🏛️</div>
+      </div>
+      <h2 class="text-2xl font-black text-white uppercase tracking-wider">GateMatrix Portal</h2>
+      <p class="text-xs text-slate-400">Institutional Access & Multi-Tier Verification</p>
+    </div>
+
+    <!-- Toggle Buttons -->
+    <div class="flex bg-slate-900 p-1 rounded-2xl border border-slate-800">
+      <button onclick="toggleAuth(true)" id="tabLogin" class="flex-1 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white transition">Login</button>
+      <button onclick="toggleAuth(false)" id="tabRegister" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">First Time? Register</button>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl space-y-4">
+      
+      <!-- Role Selection (Shows on Register) -->
+      <div id="roleField" class="hidden">
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Select Role</label>
+        <select id="userRole" onchange="checkRoleDetails()" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+          <option value="student">Student</option>
+          <option value="counselor">Class Counselor (Batch of 20)</option>
+          <option value="advisor">Class Advisor</option>
+          <option value="hod">Head of Department (HOD)</option>
+          <option value="principal">Principal / Admin Office</option>
+          <option value="security">Main Gate Security</option>
+        </select>
+      </div>
+
+      <!-- Additional Class Details for Counselor / Student -->
+      <div id="classDetails" class="hidden grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Department</label>
+          <select id="userDept" class="w-full px-2.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+            <option value="CSE">CSE</option><option value="ECE">ECE</option><option value="MECH">MECH</option><option value="IT">IT</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Year & Sec</label>
+          <input type="text" id="userYearSec" placeholder="III - A" class="w-full px-2.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Assigned Batch</label>
+          <select id="userBatch" class="w-full px-2.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+            <option value="Batch 1 (1-20)">Batch 1 (Rolls 1-20)</option>
+            <option value="Batch 2 (21-40)">Batch 2 (Rolls 21-40)</option>
+            <option value="Batch 3 (41-60)">Batch 3 (Rolls 41-60)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Name (Shows on Register) -->
+      <div id="nameField" class="hidden">
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
+        <input type="text" id="userName" placeholder="e.g. Dr. Kumar / Priya" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+      </div>
+
+      <!-- User ID / Roll Number -->
+      <div>
+        <label id="userIdLabel" class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Roll Number / Staff ID</label>
+        <input type="text" id="userId" placeholder="Enter your ID or Roll Number" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Password</label>
+        <input type="password" id="userPass" placeholder="••••••••" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+      </div>
+
+      <button onclick="handleAuthSubmit()" id="authSubmitBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-lg transition active:scale-95">
+        Login to Dashboard
+      </button>
+
+      <div id="authAlert" class="hidden p-3 rounded-xl text-xs text-center"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD WRAPPER (Shows after login) -->
+  <div id="dashboardSection" class="hidden max-w-6xl w-full mx-auto space-y-6">
+    <!-- Header -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold">🛡️</div>
+        <div>
+          <h2 id="dashGreeting" class="text-base font-bold text-white">Welcome</h2>
+          <p id="dashRoleBadge" class="text-xs text-emerald-400 font-mono">Role: -</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="px-4 py-2 bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 border border-slate-700 rounded-xl text-xs font-mono transition">
+        Logout ⎋
+      </button>
+    </div>
+
+    <!-- Dynamic Container Injected via JavaScript based on Role -->
+    <div id="roleContent"></div>
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-600 py-4">
+    GateMatrix • Unified Campus Access Engine • Developed by <span class="text-emerald-400 font-bold">Surya</span>
+  </footer>
+
+  <script>
+    let isLoginMode = true;
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        splash.style.opacity = '0';
+        setTimeout(() => splash.style.display = 'none', 700);
+      }, 1500);
+
+      if (currentUser) {
+        showDashboard(currentUser);
+      }
+    });
+
+    function toggleAuth(login) {
+      isLoginMode = login;
+      document.getElementById('tabLogin').className = login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white transition' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition';
+      document.getElementById('tabRegister').className = !login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white transition' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition';
+      
+      document.getElementById('roleField').classList.toggle('hidden', login);
+      document.getElementById('nameField').classList.toggle('hidden', login);
+      document.getElementById('authSubmitBtn').innerText = login ? 'Login to Dashboard' : 'Register Account';
+      checkRoleDetails();
+    }
+
+    function checkRoleDetails() {
+      const role = document.getElementById('userRole').value;
+      const needsClass = !isLoginMode && (role === 'counselor' || role === 'student');
+      document.getElementById('classDetails').classList.toggle('hidden', !needsClass);
+    }
+
+    async function handleAuthSubmit() {
+      const userId = document.getElementById('userId').value.trim();
+      const password = document.getElementById('userPass').value.trim();
+
+      if (!userId || !password) return alert('Please fill all fields.');
+
+      if (isLoginMode) {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          sessionStorage.setItem('currentUser', JSON.stringify(data.user));
+          showDashboard(data.user);
+        } else {
+          alert(data.message);
+        }
+      } else {
+        const name = document.getElementById('userName').value.trim();
+        const role = document.getElementById('userRole').value;
+        const dept = document.getElementById('userDept').value;
+        const batch = document.getElementById('userBatch').value;
+
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, password, name, role, dept, batch })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) toggleAuth(true);
+      }
+    }
+
+    function showDashboard(user) {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+      document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
+      document.getElementById('dashRoleBadge').innerText = `Role: ${user.role.toUpperCase()} • Dept: ${user.dept || 'Campus'}`;
+
+      const container = document.getElementById('roleContent');
+
+      // 1. STUDENT VIEW
+      if (user.role === 'student') {
+        container.innerHTML = `
+          <div class="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+            <h3 class="text-sm font-bold text-white uppercase font-mono">Apply for Leave / Outpass</h3>
+            <textarea id="passReason" rows="3" placeholder="Enter reason for leave..." class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"></textarea>
+            <button onclick="studentApplyPass('${user.userId}')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold">Submit to Counselor</button>
+          </div>
+        `;
+      }
+
+      // 2. COUNSELOR VIEW
+      else if (user.role === 'counselor') {
+        container.innerHTML = `
+          <div class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-wrap justify-between items-center gap-4">
+              <div>
+                <h3 class="text-sm font-bold text-white">Upload Your 20 Students Excel</h3>
+                <p class="text-xs text-slate-400">${user.batch}</p>
+              </div>
+              <input type="file" id="batchFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorFile('${user.dept}', '${user.batch}', '${user.name}')" class="text-xs text-slate-400">
+            </div>
+            <div id="counselorPasses"></div>
+          </div>
+        `;
+        fetchRolePasses('Pending Counselor', 'counselorPasses');
+      }
+
+      // 3. ADVISOR VIEW
+      else if (user.role === 'advisor') {
+        container.innerHTML = `<div id="advisorPasses"></div>`;
+        fetchRolePasses('Pending Advisor', 'advisorPasses');
+      }
+
+      // 4. HOD VIEW
+      else if (user.role === 'hod') {
+        container.innerHTML = `<div id="hodPasses"></div>`;
+        fetchRolePasses('Pending HOD', 'hodPasses');
+      }
+
+      // 5. PRINCIPAL / ADMIN
+      else if (user.role === 'principal') {
+        container.innerHTML = `<div id="principalPasses"></div>`;
+        fetchRolePasses('Pending Principal', 'principalPasses');
+      }
+
+      // 6. SECURITY SCANNER
+      else if (user.role === 'security') {
+        container.innerHTML = `
+          <div class="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center space-y-4">
+            <h3 class="text-sm font-bold text-white">Main Gate Scanner</h3>
+            <input type="text" id="scanRoll" placeholder="Scan Barcode / Enter Roll No" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-sm font-mono">
+            <button onclick="verifyGatePass()" class="w-full py-3 bg-emerald-600 rounded-xl text-xs font-bold">Verify & Record Exit</button>
+          </div>
+        `;
+      }
+    }
+
+    async function studentApplyPass(rollNo) {
+      const reason = document.getElementById('passReason').value.trim();
+      if (!reason) return alert('Enter a reason');
+      const res = await fetch('/api/apply-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo, reason })
+      });
+      const data = await res.json();
+      alert(data.message);
+      if (data.success) document.getElementById('passReason').value = '';
+    }
+
+    async function fetchRolePasses(status, elementId) {
+      const res = await fetch(`/api/passes?status=${encodeURIComponent(status)}`);
+      const passes = await res.json();
+      const el = document.getElementById(elementId);
+      if (!passes || passes.length === 0) {
+        el.innerHTML = `<div class="p-8 text-center text-slate-500 bg-slate-900 rounded-3xl border border-slate-800 text-xs font-mono">No pending requests in your queue.</div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-400 font-mono">
+              <tr>
+                <th class="p-4">Roll</th><th class="p-4">Name</th><th class="p-4">Reason</th><th class="p-4">Parent</th><th class="p-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              ${passes.map(p => `
+                <tr>
+                  <td class="p-4 font-mono text-emerald-400">${p.rollNo}</td>
+                  <td class="p-4">${p.name}</td>
+                  <td class="p-4 text-slate-300">${p.reason}</td>
+                  <td class="p-4 font-mono">${p.parentContact || '-'}</td>
+                  <td class="p-4 text-right">
+                    <button onclick="approveAction('${p._id}', '${status}')" class="px-3 py-1.5 bg-emerald-600 rounded-lg font-bold text-xs">Verify / Approve</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function approveAction(passId, currentStatus) {
+      let endpoint = '';
+      if (currentStatus === 'Pending Counselor') endpoint = '/api/approve/counselor';
+      else if (currentStatus === 'Pending Advisor') endpoint = '/api/approve/advisor';
+      else if (currentStatus === 'Pending HOD') endpoint = '/api/approve/hod';
+      else if (currentStatus === 'Pending Principal') endpoint = '/api/approve/principal';
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passId, parentCalled: true })
+      });
+      const data = await res.json();
+      alert(data.message);
+      location.reload();
+    }
+
+    async function verifyGatePass() {
+      const rollNo = document.getElementById('scanRoll').value.trim();
+      const res = await fetch('/api/scan-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo })
+      });
+      const data = await res.json();
+      alert(data.message || (data.success ? 'Pass Verified! Student Exited.' : 'Invalid Pass'));
+      if (data.success) document.getElementById('scanRoll').value = '';
+    }
+
+    function logout() {
+      sessionStorage.removeItem('currentUser');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
