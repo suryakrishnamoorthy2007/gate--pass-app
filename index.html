@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- PDF Generation Engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -30,7 +31,7 @@
     </div>
   </header>
 
-  <!-- SCREEN 1: 5 CIRCLE PORTALS -->
+  <!-- SCREEN 1: 5 CIRCLE PORTALS (Matches Hand Sketch) -->
   <main id="portalSelectionScreen" class="max-w-4xl w-full mx-auto my-auto py-10">
     <div class="text-center mb-10 space-y-2">
       <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Select Institutional Authority</h2>
@@ -38,6 +39,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-3xl mx-auto">
+      <!-- Left Column -->
       <div class="space-y-6 flex flex-col items-center">
         <button onclick="requestUnlock('student', 'Student Portal', '1111')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">👨‍🎓</span>
@@ -48,19 +50,21 @@
         <button onclick="requestUnlock('counselor', 'Counselor Portal', '2222')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-emerald-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">📋</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Counselor</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Parent Verification</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Assigned Batch</span>
         </button>
       </div>
 
+      <!-- Center Hub -->
       <div class="flex flex-col items-center">
         <button onclick="requestUnlock('principal', 'Principal / Admin Office', '5555')" class="group relative flex flex-col items-center justify-center w-48 h-48 rounded-full bg-gradient-to-b from-white to-blue-50/50 border-4 border-blue-600 shadow-xl hover:shadow-2xl hover:scale-105 transition duration-300 active:scale-95">
           <span class="absolute -top-3 bg-blue-600 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow">Executive</span>
           <span class="text-4xl mb-1 group-hover:scale-110 transition">🏛️</span>
           <span class="text-sm font-extrabold text-slate-900 group-hover:text-blue-600 text-center px-4">Principal / Admin</span>
-          <span class="text-[10px] text-slate-500 font-mono mt-0.5">College-Wide Final Sign-Off</span>
+          <span class="text-[10px] text-slate-500 font-mono mt-0.5">College-Wide Sign-Off</span>
         </button>
       </div>
 
+      <!-- Right Column -->
       <div class="space-y-6 flex flex-col items-center">
         <button onclick="requestUnlock('advisor', 'Class Advisor Portal', '3333')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">🧑‍🏫</span>
@@ -174,8 +178,7 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Application Date</th>
-              <th class="p-3">Reason</th>
-              <th class="p-3">Formal Letter</th>
+              <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Institutional Clearances</th>
               <th class="p-3">Gate Pass Validity</th>
               <th class="p-3">Campus Exit Status</th>
@@ -183,7 +186,7 @@
             </tr>
           </thead>
           <tbody id="studentPersonalBody" class="divide-y divide-slate-100">
-            <tr><td colspan="7" class="p-4 text-center text-slate-400">Loading your passes...</td></tr>
+            <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading your passes...</td></tr>
           </tbody>
         </table>
       </div>
@@ -206,7 +209,7 @@
               <th class="p-3">Roll No & Student</th>
               <th class="p-3">Class & Batch</th>
               <th class="p-3">Contact & Address</th>
-              <th class="p-3">Formal Letter</th>
+              <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Parent Verification</th>
               <th class="p-3">Approval Chain</th>
               <th class="p-3">Approved & Valid</th>
@@ -460,17 +463,17 @@
         const passes = await res.json();
 
         if (!passes || passes.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">You have no active pass applications.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">You have no active pass applications.</td></tr>`;
           return;
         }
 
         tbody.innerHTML = passes.map(p => `
           <tr class="hover:bg-slate-50 transition">
             <td class="p-3 font-mono text-slate-500">${new Date(p.createdAt).toLocaleDateString()}</td>
-            <td class="p-3 text-slate-700">${p.reason}</td>
             <td class="p-3">
-              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter available")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold hover:bg-blue-100">
-                📄 View Letter
+              <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
+                📄 View Full AI Letter
               </button>
             </td>
             <td class="p-3">
@@ -507,14 +510,14 @@
       } catch (err) {}
     }
 
-    // COUNSELOR QUEUE
+    // COUNSELOR QUEUE (Strictly filtered by counselor's batch)
     async function fetchCounselorQueue() {
-     const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}&batch=${encodeURIComponent(loggedUser.batch)}`);
+      const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}&batch=${encodeURIComponent(loggedUser.batch)}`);
       const passes = await res.json();
       const el = document.getElementById('counselorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes pending your verification.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes pending your verification in ${loggedUser.batch}.</div>`;
         return;
       }
 
@@ -524,7 +527,7 @@
             <tr>
               <th class="p-3">Roll & Name</th>
               <th class="p-3">Parent Phone</th>
-              <th class="p-3">Application Letter</th>
+              <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Verification Check</th>
               <th class="p-3 text-right">Action</th>
             </tr>
@@ -539,8 +542,9 @@
                   </a>
                 </td>
                 <td class="p-3">
-                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
-                    📄 View Formal Letter
+                  <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
+                    📄 View Full AI Letter
                   </button>
                 </td>
                 <td class="p-3">
@@ -594,7 +598,7 @@
             <tr>
               <th class="p-3">Roll & Name</th>
               <th class="p-3">Parent Contact</th>
-              <th class="p-3">Application Letter</th>
+              <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Counselor Verification</th>
               <th class="p-3 text-right">Advisor Action</th>
             </tr>
@@ -609,8 +613,9 @@
                   </a>
                 </td>
                 <td class="p-3">
-                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
-                    📄 View Letter
+                  <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
+                    📄 View Full AI Letter
                   </button>
                 </td>
                 <td class="p-3">
@@ -676,7 +681,7 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Roll & Name</th>
-              <th class="p-3">Formal Letter</th>
+              <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Prior Approvals</th>
               <th class="p-3 text-right">HOD Action</th>
             </tr>
@@ -686,8 +691,9 @@
               <tr>
                 <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name} (${p.dept} ${p.yearSec})</span></td>
                 <td class="p-3">
-                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
-                    📄 View Formal Letter
+                  <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
+                    📄 View Full AI Letter
                   </button>
                 </td>
                 <td class="p-3">
@@ -733,7 +739,7 @@
                 <tr>
                   <th class="p-3">Roll & Name</th>
                   <th class="p-3">Department & Class</th>
-                  <th class="p-3">Formal Letter</th>
+                  <th class="p-3">Reason & Formal Letter</th>
                   <th class="p-3">Verification Chain</th>
                   <th class="p-3 text-right">Action</th>
                 </tr>
@@ -749,9 +755,10 @@
                       <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">${p.dept}</span> 
                       ${p.yearSec || ''} <span class="text-[11px] text-slate-400">(${p.batch || '-'})</span>
                     </td>
-                    <td class="p-3">
-                      <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
-                        📄 View Formal Letter
+                    <td class="p-3 max-w-xs">
+                      <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+                      <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
+                        📄 Read AI Letter
                       </button>
                     </td>
                     <td class="p-3">
@@ -820,7 +827,8 @@
               🏠 ${p.address || 'Campus Hostel'}
             </td>
             <td class="p-3">
-              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+              <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
+              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
                 📄 Letter
               </button>
             </td>
@@ -922,91 +930,88 @@
       doc.save(`GateMatrix_MasterRoster_${loggedUser.role}_${Date.now()}.pdf`);
     }
 
-    // INDIVIDUAL PASS PDF WITH EMBEDDED FORMAL APPLICATION LETTER
+    // INDIVIDUAL PASS PDF WITH EMBEDDED FORMAL LETTER
     function downloadSinglePassPDF(pass) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-      // Outer Border
       doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.8);
       doc.rect(10, 10, 190, 277);
 
-      // Top Banner
       doc.setFillColor(37, 99, 235);
-      doc.rect(10, 10, 190, 24, 'F');
+      doc.rect(10, 10, 190, 22, 'F');
 
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
-      doc.text("GATEMATRIX OFFICIAL PASS & LEAVE REQUISITION", 105, 20, { align: "center" });
+      doc.text("GATEMATRIX OFFICIAL PASS & LEAVE REQUISITION", 105, 19, { align: "center" });
 
       const downloadAudit = `Downloaded By: ${loggedUser.name} (${loggedUser.role.toUpperCase()}) on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`;
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
-      doc.text(downloadAudit, 105, 28, { align: "center" });
+      doc.text(downloadAudit, 105, 27, { align: "center" });
 
-      // Student Details
       doc.autoTable({
-        startY: 38,
-        margin: { left: 15, right: 15 },
-        head: [['STUDENT PROFILE', 'INSTITUTIONAL RECORD']],
+        startY: 34,
+        margin: { left: 14, right: 14 },
+        head: [['STUDENT PROFILE', 'RECORD DETAILS']],
         body: [
           ['Roll Number', pass.rollNo || '-'],
           ['Student Name', pass.name || '-'],
-          ['Department & Class', `${pass.dept} ${pass.yearSec} (${pass.batch})`],
+          ['Department & Class', `${pass.dept} ${pass.yearSec || ''} (${pass.batch || 'Batch 1'})`],
           ['Parent Phone (Verified)', pass.parentContact || '-'],
-          ['Student Mobile / Email', `${pass.mobile || '-'} / ${pass.email || '-'}`],
-          ['Residential Address', pass.address || 'Campus Hostel']
+          ['Student Mobile', pass.mobile || '-'],
+          ['Stated Outpass Reason', pass.reason || '-']
         ],
         theme: 'striped',
-        headStyles: { fillColor: [30, 41, 59] },
-        styles: { fontSize: 8.5, cellPadding: 2.5 }
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 }
       });
 
-      // Formal Generated Letter Section
-      const letterText = pass.formalLetter || `Subject: Outpass Application\nReason: ${pass.reason}`;
+      const letterText = pass.formalLetter || `To The Principal,\n\nRespected Sir/Madam,\nI request leave due to: ${pass.reason}.\n\nYours obediently,\n${pass.name}`;
+      
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 4,
-        margin: { left: 15, right: 15 },
-        head: [['OFFICIAL REQUISITION LETTER (AUTO-GENERATED VIA GATEMATRIX)']],
+        margin: { left: 14, right: 14 },
+        head: [['OFFICIAL REQUISITION LETTER (AUTO-GENERATED VIA GATEMATRIX AI)']],
         body: [[letterText]],
         theme: 'plain',
-        headStyles: { fillColor: [71, 85, 105], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 7.5, cellPadding: 3, font: 'courier' }
+        headStyles: { fillColor: [71, 85, 105], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        styles: { fontSize: 7, cellPadding: 3, font: 'courier', textColor: [30, 41, 59] }
       });
 
-      // Governance Audit Trail
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 4,
-        margin: { left: 15, right: 15 },
-        head: [['CLEARANCE TIER', 'AUDIT STATUS & VERIFICATION']],
+        margin: { left: 14, right: 14 },
+        head: [['GOVERNANCE TIER', 'AUDIT STATUS & STAMP']],
         body: [
           ['Tier 1: Parent Call Check', pass.parentCallVerified ? `VERIFIED: ${pass.parentCalledBy} (${pass.parentCallTime})` : 'Unverified'],
           ['Tier 2: Class Advisor Sign-Off', pass.advisorApproval?.approved ? `APPROVED (${pass.advisorApproval?.time})` : 'Pending'],
           ['Tier 3: HOD Authorization', pass.hodApproval?.approved ? `AUTHORIZED (${pass.hodApproval?.time})` : 'Pending'],
-          ['Tier 4: Principal Exit Clearance', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime})` : 'Pending'],
-          ['Physical Gate Exit Status', pass.exitStatus === 'Exited Campus' ? `EXITED AT ${pass.exitTime}` : 'INSIDE CAMPUS']
+          ['Tier 4: Principal Final Clearance', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime})` : 'Pending'],
+          ['Physical Gate Movement Status', pass.exitStatus === 'Exited Campus' ? `EXITED AT ${pass.exitTime}` : 'INSIDE CAMPUS']
         ],
         theme: 'grid',
-        headStyles: { fillColor: [30, 41, 59] },
-        styles: { fontSize: 8, cellPadding: 2.5 }
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 7.5, cellPadding: 2.5 }
       });
 
-      // Signature Marks
       const finalY = doc.lastAutoTable.finalY + 16;
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
 
-      doc.text("Class Counselor", 25, finalY);
-      doc.text("Class Advisor", 75, finalY);
-      doc.text("HOD", 125, finalY);
-      doc.text("Principal / Gate Security", 160, finalY);
+      doc.text("Class Counselor", 24, finalY);
+      doc.text("Class Advisor", 72, finalY);
+      doc.text("HOD", 122, finalY);
+      doc.text("Principal / Security", 158, finalY);
 
       doc.setDrawColor(148, 163, 184);
-      doc.line(20, finalY - 3, 55, finalY - 3);
-      doc.line(70, finalY - 3, 105, finalY - 3);
-      doc.line(120, finalY - 3, 145, finalY - 3);
-      doc.line(155, finalY - 3, 195, finalY - 3);
+      doc.line(20, finalY - 3, 50, finalY - 3);
+      doc.line(68, finalY - 3, 98, finalY - 3);
+      doc.line(118, finalY - 3, 140, finalY - 3);
+      doc.line(155, finalY - 3, 192, finalY - 3);
 
       doc.save(`FormalPass_${pass.rollNo}.pdf`);
     }
