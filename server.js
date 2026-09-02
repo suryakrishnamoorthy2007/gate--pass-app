@@ -162,7 +162,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Serve Unified Single App
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
+app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'security.html')));
 // Pass Queries
 app.get('/api/passes', async (req, res) => {
   try {
