@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- PDF Generation Engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -27,7 +26,7 @@
       </div>
     </div>
     <div class="text-right text-xs text-slate-500 font-medium">
-      Academic Governance Network
+      Role-Isolated Institutional Network
     </div>
   </header>
 
@@ -66,7 +65,7 @@
         <button onclick="requestUnlock('advisor', 'Class Advisor Portal', '3333')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">🧑‍🏫</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Class Advisor</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Class Oversight</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Section Oversight</span>
         </button>
 
         <button onclick="requestUnlock('hod', 'Head of Dept (HOD)', '4444')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-purple-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
@@ -114,14 +113,19 @@
 
       <div id="academicDetails" class="hidden grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Dept</label>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Department</label>
           <select id="userDept" class="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
             <option value="CSE">CSE</option><option value="ECE">ECE</option><option value="MECH">MECH</option><option value="IT">IT</option><option value="CIVIL">CIVIL</option><option value="AI&DS">AI&DS</option>
           </select>
         </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Year & Sec</label>
-          <input type="text" id="userYearSec" placeholder="e.g. III-A" class="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+        <div id="sectionContainer">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Section</label>
+          <select id="userYearSec" class="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+            <option value="C">Section C</option>
+            <option value="D">Section D</option>
+          </select>
         </div>
       </div>
 
@@ -150,7 +154,7 @@
 
       <div class="flex items-center gap-3">
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-2">
-          <span>📥 Download Entire Records (PDF)</span>
+          <span>📥 Download Department/Section PDF</span>
         </button>
         <button onclick="logout()" class="px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-bold text-slate-600">Exit Dashboard</button>
       </div>
@@ -158,7 +162,7 @@
 
     <div id="roleDashboardContent"></div>
 
-    <!-- STUDENT PERSONAL STATUS -->
+    <!-- STUDENT VIEW -->
     <div id="studentPersonalView" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h4 class="font-bold text-slate-900 text-sm">Your Leave Applications & Live Sign-Off Status</h4>
@@ -183,12 +187,12 @@
       </div>
     </div>
 
-    <!-- AUTHORITY LOGS -->
+    <!-- AUTHORITY VIEW (STRICTLY SCOPED TO THIS ROLE) -->
     <div id="authorityLogsView" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
       <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
         <div>
-          <h4 class="font-bold text-slate-900 text-sm">Comprehensive Student Outpass Logs</h4>
-          <p class="text-xs text-slate-400">Complete student data, formal letters, parent verifications, approval chains, and live countdowns</p>
+          <h4 id="logsTitle" class="font-bold text-slate-900 text-sm">Authorized Student Outpass Logs</h4>
+          <p id="logsSubtitle" class="text-xs text-slate-400">Restricted strictly to your assigned academic jurisdiction</p>
         </div>
         <button onclick="loadUniversalLogs()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">🔄 Refresh</button>
       </div>
@@ -198,7 +202,7 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Roll No & Student</th>
-              <th class="p-3">Class</th>
+              <th class="p-3">Class & Section</th>
               <th class="p-3">Contact & Address</th>
               <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Parent Verification</th>
@@ -294,8 +298,13 @@
       document.getElementById('tabRegister').className = !login ? 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-sm' : 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-900';
       
       document.getElementById('nameField').classList.toggle('hidden', login);
-      const showAcademic = !login && (activeRole === 'counselor' || activeRole === 'advisor');
+      
+      const showAcademic = !login && (activeRole === 'counselor' || activeRole === 'advisor' || activeRole === 'hod');
       document.getElementById('academicDetails').classList.toggle('hidden', !showAcademic);
+
+      // Hide section for HOD (HOD manages all sections in that department)
+      const isAdvisor = !login && activeRole === 'advisor';
+      document.getElementById('sectionContainer').classList.toggle('hidden', !isAdvisor);
 
       document.getElementById('authSubmitBtn').innerText = login ? `Login as ${activeRole.toUpperCase()}` : `Register as ${activeRole.toUpperCase()}`;
     }
@@ -320,7 +329,7 @@
       } else {
         const name = document.getElementById('userName').value.trim();
         const dept = document.getElementById('userDept')?.value || 'CSE';
-        const yearSec = document.getElementById('userYearSec')?.value.trim() || 'III-A';
+        const yearSec = document.getElementById('userYearSec')?.value || 'A';
 
         const res = await fetch('/api/auth/register', {
           method: 'POST',
@@ -338,10 +347,17 @@
       document.getElementById('dashScreen').classList.remove('hidden');
       document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
 
+      // Dynamic Role Labels
       if (user.role === 'principal') {
         document.getElementById('dashRoleSubtitle').innerText = `EXECUTIVE CLEARANCE • College-Wide Administration (All Departments)`;
+      } else if (user.role === 'hod') {
+        document.getElementById('dashRoleSubtitle').innerText = `DEPARTMENT HOD • ${user.dept} Department (All Sections)`;
+      } else if (user.role === 'advisor') {
+        document.getElementById('dashRoleSubtitle').innerText = `CLASS ADVISOR • ${user.dept} - Section ${user.yearSec}`;
+      } else if (user.role === 'counselor') {
+        document.getElementById('dashRoleSubtitle').innerText = `CLASS COUNSELOR • Assigned Ward Roster (${user.name})`;
       } else {
-        document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} • Dept: ${user.dept || 'Engineering'}`;
+        document.getElementById('dashRoleSubtitle').innerText = `STUDENT • Dept: ${user.dept || 'Engineering'}`;
       }
 
       const topPdfBtn = document.getElementById('topBulkPdfBtn');
@@ -374,13 +390,13 @@
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
                 <div>
                   <h4 class="font-bold text-slate-800 text-sm">📥 Upload Student Master Excel</h4>
-                  <p class="text-xs text-slate-400">Class: <span class="font-semibold text-blue-600">${user.dept} ${user.yearSec || ''}</span></p>
+                  <p class="text-xs text-slate-400">Assigned Ward Roster for Counselor: <span class="font-semibold text-blue-600">${user.name}</span></p>
                 </div>
                 <input type="file" id="counselorFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorExcel()" class="text-xs">
               </div>
 
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification & Letter Review</h4>
+                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Verification (Your Counselling Students Only)</h4>
                 <div id="counselorQueue"></div>
               </div>
             </div>
@@ -389,8 +405,8 @@
         } else if (user.role === 'advisor') {
           content.innerHTML = `
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 class="font-bold text-slate-800 text-sm">Class Advisor Review Queue</h4>
-              <p class="text-xs text-slate-400">If Counselor was absent, Class Advisor can directly call parent and forward to HOD</p>
+              <h4 class="font-bold text-slate-800 text-sm">Class Advisor Review Queue (${user.dept} - Section ${user.yearSec} Only)</h4>
+              <p class="text-xs text-slate-400">Strictly displaying students of your department and section.</p>
               <div id="advisorQueue"></div>
             </div>
           `;
@@ -398,8 +414,8 @@
         } else if (user.role === 'hod') {
           content.innerHTML = `
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 class="font-bold text-slate-800 text-sm">Department HOD Review Queue</h4>
-              <p class="text-xs text-slate-400">Verifies Counselor and Class Advisor dual authorization before endorsing to Principal</p>
+              <h4 class="font-bold text-slate-800 text-sm">Department HOD Review Queue (${user.dept} Department Only)</h4>
+              <p class="text-xs text-slate-400">Verifies Counselor and Class Advisor dual authorization across all ${user.dept} sections.</p>
               <div id="hodQueue"></div>
             </div>
           `;
@@ -408,7 +424,7 @@
           content.innerHTML = `
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
               <h4 class="font-bold text-slate-800 text-sm">Principal Final Clearance (Activates 20-Min Departure Gate Window)</h4>
-              <p class="text-xs text-slate-400">Full institutional review across all departments</p>
+              <p class="text-xs text-slate-400">College-Wide Review across all departments and sections.</p>
               <div id="principalQueue"></div>
             </div>
           `;
@@ -493,22 +509,14 @@
       } catch (err) {}
     }
 
-    // COUNSELOR QUEUE (Shows pending requests for counselor's students)
+    // 1. COUNSELOR QUEUE: Strictly this Counselor's students only
     async function fetchCounselorQueue() {
-      // Matches directly by counselor's name or department
-      const res = await fetch(`/api/passes?status=Pending Counselor&counselorName=${encodeURIComponent(loggedUser.name)}`);
-      let passes = await res.json();
-
-      // If no name match, fallback to department so requests are never hidden
-      if (!passes || passes.length === 0) {
-        const deptRes = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}`);
-        passes = await deptRes.json();
-      }
-
+      const res = await fetch(`/api/passes?status=Pending Counselor&role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}`);
+      const passes = await res.json();
       const el = document.getElementById('counselorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes currently pending counselor verification.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No students in your assigned counseling roster have pending passes.</div>`;
         return;
       }
 
@@ -526,7 +534,7 @@
           <tbody class="divide-y divide-slate-100">
             ${passes.map(p => `
               <tr>
-                <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name}</span></td>
+                <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name} (${p.dept} - ${p.yearSec})</span></td>
                 <td class="p-3">
                   <a href="tel:${p.parentContact}" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold hover:bg-emerald-100">
                     📞 ${p.parentContact}
@@ -572,14 +580,14 @@
       loadUniversalLogs();
     }
 
-    // ADVISOR QUEUE
+    // 2. CLASS ADVISOR QUEUE: Strictly this Department & Section only (e.g. CSE-A)
     async function fetchAdvisorQueue() {
-      const res = await fetch(`/api/passes?status=Pending Advisor&dept=${encodeURIComponent(loggedUser.dept)}`);
+      const res = await fetch(`/api/passes?status=Pending Advisor&role=advisor&dept=${encodeURIComponent(loggedUser.dept)}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`);
       const passes = await res.json();
       const el = document.getElementById('advisorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending Class Advisor review.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending Class Advisor review for ${loggedUser.dept} Section ${loggedUser.yearSec}.</div>`;
         return;
       }
 
@@ -656,14 +664,14 @@
       loadUniversalLogs();
     }
 
-    // HOD QUEUE
+    // 3. HOD QUEUE: Strictly this Department only (all sections, e.g. CSE A + B)
     async function fetchHODQueue() {
-      const res = await fetch(`/api/passes?status=Pending HOD&dept=${encodeURIComponent(loggedUser.dept)}`);
+      const res = await fetch(`/api/passes?status=Pending HOD&role=hod&dept=${encodeURIComponent(loggedUser.dept)}`);
       const passes = await res.json();
       const el = document.getElementById('hodQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending HOD authorization.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending HOD authorization for ${loggedUser.dept} Department.</div>`;
         return;
       }
 
@@ -672,6 +680,7 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Roll & Name</th>
+              <th class="p-3">Class & Section</th>
               <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Prior Approvals</th>
               <th class="p-3 text-right">HOD Action</th>
@@ -680,7 +689,8 @@
           <tbody class="divide-y divide-slate-100">
             ${passes.map(p => `
               <tr>
-                <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name} (${p.dept} ${p.yearSec})</span></td>
+                <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name}</span></td>
+                <td class="p-3 font-mono font-bold text-blue-700">${p.dept} - ${p.yearSec}</td>
                 <td class="p-3">
                   <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
                   <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || p.reason)})' class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100">
@@ -709,13 +719,13 @@
       `;
     }
 
-    // PRINCIPAL QUEUE
+    // 4. PRINCIPAL QUEUE: College-wide (All departments, all sections)
     async function fetchPrincipalQueue() {
       const el = document.getElementById('principalQueue');
       if (!el) return;
 
       try {
-        const res = await fetch('/api/passes?status=Pending%20Principal');
+        const res = await fetch('/api/passes?status=Pending%20Principal&role=principal');
         const passes = await res.json();
 
         if (!passes || passes.length === 0) {
@@ -729,7 +739,7 @@
               <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
                 <tr>
                   <th class="p-3">Roll & Name</th>
-                  <th class="p-3">Department & Class</th>
+                  <th class="p-3">Department & Section</th>
                   <th class="p-3">Reason & Formal Letter</th>
                   <th class="p-3">Verification Chain</th>
                   <th class="p-3 text-right">Action</th>
@@ -744,7 +754,7 @@
                     </td>
                     <td class="p-3 font-mono text-slate-600">
                       <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">${p.dept}</span> 
-                      ${p.yearSec || ''}
+                      Sec ${p.yearSec || 'A'}
                     </td>
                     <td class="p-3 max-w-xs">
                       <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
@@ -789,17 +799,32 @@
       openDashboard(loggedUser);
     }
 
-    // AUTHORITY COMPLETE LOGS
+    // STRICTLY FILTERED LOGS TABLE FOR BOTTOM DASHBOARD
     async function loadUniversalLogs() {
       const tbody = document.getElementById('universalLogsBody');
-      if (!tbody) return;
+      if (!tbody || !loggedUser) return;
 
       try {
-        const res = await fetch('/api/passes');
+        let logUrl = '/api/passes?';
+        if (loggedUser.role === 'principal') {
+          logUrl += 'role=principal';
+          document.getElementById('logsTitle').innerText = 'College-Wide Master Outpass Logs (All Departments)';
+        } else if (loggedUser.role === 'hod') {
+          logUrl += `role=hod&dept=${encodeURIComponent(loggedUser.dept)}`;
+          document.getElementById('logsTitle').innerText = `${loggedUser.dept} Department Movement Logs (All Sections)`;
+        } else if (loggedUser.role === 'advisor') {
+          logUrl += `role=advisor&dept=${encodeURIComponent(loggedUser.dept)}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
+          document.getElementById('logsTitle').innerText = `${loggedUser.dept} - Section ${loggedUser.yearSec} Outpass Logs Only`;
+        } else if (loggedUser.role === 'counselor') {
+          logUrl += `role=counselor&counselorName=${encodeURIComponent(loggedUser.name)}`;
+          document.getElementById('logsTitle').innerText = `Outpass Logs for ${loggedUser.name}'s Counselling Ward Only`;
+        }
+
+        const res = await fetch(logUrl);
         masterPassList = await res.json();
 
         if (!masterPassList || masterPassList.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">No pass logs available.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">No records found within your assigned jurisdiction.</td></tr>`;
           return;
         }
 
@@ -809,8 +834,8 @@
               <span class="font-bold text-blue-600">${p.rollNo}</span><br>
               <span class="text-slate-800 font-sans font-semibold">${p.name}</span>
             </td>
-            <td class="p-3 text-slate-500 font-mono">
-              ${p.dept} ${p.yearSec || ''}
+            <td class="p-3 font-mono text-slate-600">
+              <span class="font-bold text-blue-700">${p.dept}</span> - Sec ${p.yearSec || 'A'}
             </td>
             <td class="p-3 text-[11px] text-slate-600">
               📞 Parent: <b>${p.parentContact || '-'}</b><br>
@@ -872,9 +897,9 @@
       return `⏱️ ${m}m ${s}s left`;
     }
 
-    // TOP BULK PDF DOWNLOAD ENGINE
+    // TOP BULK PDF DOWNLOAD ENGINE (Strictly prints only authorized records)
     function downloadMasterPDF() {
-      if (!masterPassList || masterPassList.length === 0) return alert('No pass data available to export.');
+      if (!masterPassList || masterPassList.length === 0) return alert('No pass records found in your jurisdiction to export.');
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -889,18 +914,18 @@
 
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
-      doc.text("MASTER STUDENT MOVEMENT & PARENT VERIFICATION AUDIT REPORT", 148, 27, { align: "center" });
+      doc.text(`OFFICIAL REPOSITORY REPORT • JURISDICTION: ${loggedUser.role.toUpperCase()} (${loggedUser.dept} ${loggedUser.yearSec ? '- Section ' + loggedUser.yearSec : ''})`, 148, 27, { align: "center" });
 
       const nowString = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
       doc.setTextColor(51, 65, 85);
       doc.setFontSize(8.5);
-      doc.text(`Official Audit Watermark: Document Generated By: ${loggedUser.name} (${loggedUser.role.toUpperCase()}) | Download Date & Time: ${nowString} IST`, 12, 39);
+      doc.text(`Official Audit: Generated By: ${loggedUser.name} (${loggedUser.role.toUpperCase()}) | Download Date & Time: ${nowString} IST`, 12, 39);
 
       const tableData = masterPassList.map((p, idx) => [
         idx + 1,
         p.rollNo,
         p.name,
-        `${p.dept} ${p.yearSec || ''}`,
+        `${p.dept} - ${p.yearSec || 'A'}`,
         p.parentContact || '-',
         p.parentCallVerified ? `✓ ${p.parentCalledBy}` : 'Unverified',
         p.approvalTime || '-',
@@ -911,17 +936,17 @@
       doc.autoTable({
         startY: 43,
         margin: { left: 10, right: 10 },
-        head: [['#', 'Roll No', 'Name', 'Class', 'Parent Contact', 'Parent Call Audit', 'Approved Time', 'Gate Exit Status', 'Reason']],
+        head: [['#', 'Roll No', 'Name', 'Class & Sec', 'Parent Contact', 'Parent Call Audit', 'Approved Time', 'Gate Exit Status', 'Reason']],
         body: tableData,
         theme: 'grid',
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
         styles: { fontSize: 7.5, cellPadding: 2 }
       });
 
-      doc.save(`GateMatrix_MasterRoster_${loggedUser.role}_${Date.now()}.pdf`);
+      doc.save(`GateMatrix_${loggedUser.role}_${loggedUser.dept}_${Date.now()}.pdf`);
     }
 
-    // INDIVIDUAL PASS PDF WITH FORMAL LETTER
+    // INDIVIDUAL PASS PDF
     function downloadSinglePassPDF(pass) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -950,7 +975,8 @@
         body: [
           ['Roll Number', pass.rollNo || '-'],
           ['Student Name', pass.name || '-'],
-          ['Department & Class', `${pass.dept} ${pass.yearSec || ''}`],
+          ['Department & Section', `${pass.dept} - Section ${pass.yearSec || 'A'}`],
+          ['Assigned Counselor', pass.counselorName || '-'],
           ['Parent Phone (Verified)', pass.parentContact || '-'],
           ['Student Mobile', pass.mobile || '-'],
           ['Stated Outpass Reason', pass.reason || '-']
@@ -977,7 +1003,7 @@
         margin: { left: 14, right: 14 },
         head: [['GOVERNANCE TIER', 'AUDIT STATUS & STAMP']],
         body: [
-          ['Tier 1: Parent Call Check', pass.parentCallVerified ? `VERIFIED: ${pass.parentCalledBy} (${pass.parentCallTime})` : 'Unverified'],
+          ['Tier 1: Counselor Parent Check', pass.parentCallVerified ? `VERIFIED: ${pass.parentCalledBy} (${pass.parentCallTime})` : 'Unverified'],
           ['Tier 2: Class Advisor Sign-Off', pass.advisorApproval?.approved ? `APPROVED (${pass.advisorApproval?.time})` : 'Pending'],
           ['Tier 3: HOD Authorization', pass.hodApproval?.approved ? `AUTHORIZED (${pass.hodApproval?.time})` : 'Pending'],
           ['Tier 4: Principal Final Clearance', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime})` : 'Pending'],
