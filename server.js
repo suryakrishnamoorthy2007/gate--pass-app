@@ -11,12 +11,14 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
+// --- 1. MONGODB ATLAS CONNECTION ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:AdminPass123@cluster0.gpgplkf.mongodb.net/gatepass?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
+// --- 2. IST TIME HELPER ---
 function getISTTimeString(date = new Date()) {
   return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -30,7 +32,7 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// Formal Letter Generator Engine
+// --- 3. FORMAL AI LETTER GENERATOR ---
 function generateFormalLetter(student, rawReason) {
   const currentDate = new Date().toLocaleDateString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -47,8 +49,8 @@ From:
 ${student.name}
 Roll Number: ${student.rollNo}
 Department of ${student.dept}, Year & Section: ${student.yearSec || 'III-A'}
-Batch: ${student.batch || 'General'}
-Contact: ${student.mobile || '-'} | Parent Contact: ${student.parentContact || '-'}
+Batch / Roll Range: ${student.batch || 'General Batch'}
+Student Contact: ${student.mobile || '-'} | Parent Contact: ${student.parentContact || '-'}
 
 Through:
 1. Assigned Class Counselor (${student.counselorName || 'Counselor'})
@@ -61,22 +63,22 @@ Institutional Campus Administration.
 
 Respected Sir/Madam,
 
-Subject: Requisition for authorized institutional leave / gate clearance - reg.
+Subject: Requisition for authorized institutional leave / campus gate clearance - reg.
 
-I am writing this formal application to humbly inform the institutional authorities that I require permission to leave the campus premises due to the following necessity:
+I am writing this formal application to humbly submit that I require permission to leave the campus premises due to the following necessity:
 
 "${rawReason.trim()}"
 
-I have duly briefed my parents regarding this departure, and they can be contacted at ${student.parentContact || '-'} for direct telephonic verification. I commit to adhering to campus discipline and completing any pending academic deliverables upon my return.
+I have duly informed my parents regarding this leave requirement, and they can be contacted at ${student.parentContact || '-'} for direct telephonic verification. I undertake that I will adhere to all institutional guidelines and complete any missed academic coursework immediately upon my return.
 
-Kindly grant me the requisite authorization and approve my campus gate pass for the aforementioned reason.
+Kindly grant me the requisite clearance and approve my gate pass for the aforementioned period.
 
 Yours obediently,
 ${student.name}
 (Roll No: ${student.rollNo})`;
 }
 
-// --- SCHEMAS ---
+// --- 4. DATABASE SCHEMAS ---
 const UserSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -114,7 +116,7 @@ const PassSchema = new mongoose.Schema({
   email: String,
   address: String,
   reason: { type: String, required: true },
-  formalLetter: { type: String, default: '' }, // Auto-generated letter text
+  formalLetter: { type: String, default: '' },
   
   status: {
     type: String,
@@ -140,7 +142,7 @@ const PassSchema = new mongoose.Schema({
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// --- AUTH ROUTES ---
+// --- 5. AUTHENTICATION ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { userId, name, password, role, dept, yearSec, batch } = req.body;
@@ -179,7 +181,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- EXCEL UPLOAD ---
+// --- 6. EXCEL ROSTER UPLOAD ---
 app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "Please select an Excel file" });
@@ -219,7 +221,7 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
           mobile: mobileIdx !== -1 && row[mobileIdx] ? String(row[mobileIdx]).trim() : '-',
           parentContact: parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : '-',
           email: emailIdx !== -1 && row[emailIdx] ? String(row[emailIdx]).trim() : '-',
-          address: addrIdx !== -1 && row[addrIdx] ? String(row[addrIdx]).trim() : 'Hostel / Day Scholar'
+          address: addrIdx !== -1 && row[addrIdx] ? String(row[addrIdx]).trim() : 'Campus Hostel'
         },
         { upsert: true }
       );
@@ -231,7 +233,7 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   }
 });
 
-// --- WORKFLOW APIs ---
+// --- 7. WORKFLOW APIs ---
 app.get('/api/passes', async (req, res) => {
   try {
     const { status, dept, rollNo, batch } = req.query;
@@ -240,6 +242,7 @@ app.get('/api/passes', async (req, res) => {
     if (dept) filter.dept = dept.toUpperCase();
     if (rollNo) filter.rollNo = rollNo.trim();
     if (batch) filter.batch = batch.trim();
+
     const passes = await Pass.find(filter).sort({ createdAt: -1 });
     res.json(passes);
   } catch (err) {
@@ -247,7 +250,7 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Student Apply (Generates Formal Letter)
+// Student Apply
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
@@ -303,7 +306,7 @@ app.post('/api/approve/counselor', async (req, res) => {
   }
 });
 
-// Class Advisor Approval
+// Class Advisor Approval (with absent counselor fallback)
 app.post('/api/approve/advisor', async (req, res) => {
   try {
     const { passId, advisorName, parentCalledFallback } = req.body;
@@ -348,7 +351,7 @@ app.post('/api/approve/hod', async (req, res) => {
   }
 });
 
-// Principal Approval
+// Principal Approval (Starts 20-min countdown)
 app.post('/api/approve/principal', async (req, res) => {
   try {
     const pass = await Pass.findById(req.body.passId);
