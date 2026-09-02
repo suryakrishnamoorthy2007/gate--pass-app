@@ -1,456 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Office Admin - Gate Pass Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GateMatrix • Principal & Executive Clearance Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
-    <!-- ================= ULTRA-MODERN CYBER SPLASH SCREEN ================= -->
-<div id="splashScreen" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-between py-12 px-4 transition-all duration-1000 overflow-hidden select-none">
-  
-  <!-- Cyber Background Ambient Glows -->
-  <div class="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-  <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
 
-  <!-- Top System Badge -->
-  <div class="z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-    <span class="text-[10px] font-mono tracking-widest text-emerald-300 font-bold uppercase">SYSTEM SECURE • READY</span>
-  </div>
+  <!-- Startup Cyber Splash Screen -->
+  <div id="splashScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between py-12 px-4 transition-all duration-1000 overflow-hidden select-none">
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-  <!-- Center Holographic Shield Logo -->
-  <div class="z-10 flex flex-col items-center text-center space-y-6">
-    <div class="relative flex items-center justify-center">
-      <!-- Outer Rotating Cyber Ring -->
-      <div class="absolute w-32 h-32 border-2 border-dashed border-emerald-500/40 rounded-full animate-[spin_10s_linear_infinite]"></div>
-      <!-- Middle Reverse Ring -->
-      <div class="absolute w-28 h-28 border border-teal-400/50 rounded-full animate-[spin_6s_linear_infinite_reverse]"></div>
-      <!-- Center Emblem Card with Neon Glow -->
-      <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-[2px] shadow-[0_0_40px_rgba(16,185,129,0.45)]">
-        <div class="w-full h-full bg-slate-900/95 backdrop-blur-xl rounded-[14px] flex items-center justify-center text-4xl shadow-inner">
-          🛡️
+    <div class="z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-emerald-500/30">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-[10px] font-mono tracking-widest text-emerald-300 font-bold uppercase">SYSTEM SECURE • READY</span>
+    </div>
+
+    <div class="z-10 flex flex-col items-center text-center space-y-6">
+      <div class="relative flex items-center justify-center">
+        <div class="absolute w-28 h-28 border border-teal-400/50 rounded-full animate-[spin_6s_linear_infinite]"></div>
+        <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-[2px] shadow-[0_0_40px_rgba(16,185,129,0.45)]">
+          <div class="w-full h-full bg-slate-900/95 rounded-[14px] flex items-center justify-center text-4xl">
+            🛡️
+          </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Title and Subtitle -->
-    <div class="space-y-1.5">
-      <h1 class="text-2xl md:text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-teal-300 uppercase">
-        Smart Gate Pass
-      </h1>
-      <p class="text-[11px] md:text-xs font-mono tracking-[0.28em] text-emerald-400 font-semibold uppercase">
-        INSTITUTIONAL ACCESS ENGINE
-      </p>
+      
+      <div class="space-y-1">
+        <h1 class="text-2xl md:text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-teal-300 uppercase">
+          GateMatrix
+        </h1>
+        <p class="text-[11px] font-mono tracking-[0.25em] text-emerald-400 uppercase">
+          EXECUTIVE CAMPUS CLEARANCE ENGINE
+        </p>
+      </div>
     </div>
 
-    <!-- Progress Indicator Bar -->
-    <div class="w-44 h-1.5 bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/60 p-[1px]">
-      <div class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]"></div>
-    </div>
-  </div>
-
-  <!-- Developer Credits Footer -->
-  <div class="z-10 text-center">
-    <div class="inline-block px-5 py-2 rounded-xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-md shadow-lg">
-      <p class="text-[10px] tracking-[0.2em] text-slate-400 uppercase">Engineered & Developed by</p>
+    <div class="z-10 text-center">
+      <p class="text-[10px] tracking-[0.2em] text-slate-400 uppercase">Designed & Developed by</p>
       <p class="text-sm font-black tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 mt-0.5">
         SURYA
       </p>
     </div>
   </div>
 
-</div>
-<!-- =================================================================== -->
+  <!-- Main Container -->
+  <div class="max-w-7xl w-full mx-auto space-y-6 relative z-10">
 
-    <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full mb-3 text-2xl font-bold">
-                    🔒
-                </div>
-                <h2 class="text-2xl font-bold text-slate-800">Admin Portal</h2>
-                <p class="text-xs text-slate-500 mt-1">Please authenticate to manage gate passes</p>
-            </div>
-
-            <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
-                    <input type="text" id="adminUser" required placeholder="admin" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
-                    <input type="password" id="adminPass" required placeholder="••••••••" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div id="loginError" class="hidden text-xs text-red-600 font-medium text-center"></div>
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition">
-                    Unlock Dashboard
-                </button>
-            </form>
+    <!-- Header Navigation -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-lg flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-2xl">
+            🏛️
+          </div>
         </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">GateMatrix • Principal & Executive Administration</h1>
+          <p class="text-xs text-emerald-400 font-mono">Final Institutional Authority & 20-Min Gate Pass Engine</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-bold font-mono">
+          Total Students: <span id="studentCount">0</span>
+        </div>
+        <button onclick="refreshAll()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-mono transition">
+          🔄 Refresh Queues
+        </button>
+      </div>
     </div>
 
-    <div id="uploadModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 text-center">
-            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
-                📥
-            </div>
-            <h2 class="text-lg font-bold text-slate-800 mb-1">Upload Student Excel Sheet</h2>
-            <p class="text-xs text-slate-500 mb-4">Please upload your <b>.xlsx</b> or <b>.csv</b> file containing student details (RollNo, Name, Dept, Year, Sec, Mobile, Address).</p>
-
-            <div class="border-2 border-dashed border-indigo-200 rounded-xl p-4 bg-indigo-50/50 mb-4">
-                <input type="file" id="modalFileInput" accept=".xlsx, .xls, .csv" class="w-full text-xs file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700">
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="w-1/2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition">
-                    Later
-                </button>
-                <button onclick="uploadModalExcel()" class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition shadow">
-                    Upload & Sync
-                </button>
-            </div>
-            <div id="uploadStatusMsg" class="hidden mt-3 text-xs font-semibold"></div>
+    <!-- Tier 4: Principal Pending Clearance Box -->
+    <div class="bg-slate-900/90 border border-emerald-500/40 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            Awaiting Principal Final Clearance
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Approved by Counselor, Class Advisor & HOD. Click to start 20-min Gate Timer.</p>
         </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+            <tr>
+              <th class="px-5 py-3.5">Roll No</th>
+              <th class="px-5 py-3.5">Student Name</th>
+              <th class="px-5 py-3.5">Class / Batch</th>
+              <th class="px-5 py-3.5">Reason</th>
+              <th class="px-5 py-3.5">Chain of Approvals</th>
+              <th class="px-5 py-3.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="principalTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500 font-mono">Loading pending passes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+    <!-- Live Gate Activity Logs -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800">
+        <h2 class="text-sm font-bold text-white">Live Gate Access & Exit Logs</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Real-time tracking of passes approved, scanned at security, and exited</p>
+      </div>
 
-        <header class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800">🏛️ College Gate Pass Administration</h1>
-                <p class="text-xs text-slate-500"> • 20-Minute Expiry Engine</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="inline-flex items-center gap-1 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition">
-                    📥 Upload Student Excel
-                </button>
-                <button onclick="downloadPDF()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow transition">
-                    📄 Download Passes PDF
-                </button>
-                <button onclick="handleLogout()" class="px-3.5 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-300 rounded-lg text-xs font-semibold transition">
-                    Logout
-                </button>
-            </div>
-        </header>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-lg mx-auto">
-            <h2 class="text-base font-bold text-slate-800 mb-1">🎫 Issue / Approve Student Gate Pass</h2>
-            <p class="text-xs text-slate-500 mb-4">Enter Student Roll / Barcode Number (Details will auto-fetch from uploaded Excel)</p>
-
-            <form id="approvalForm" onsubmit="approvePass(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Roll / ID Number</label>
-                    <input type="text" id="rollNoInput" required placeholder="e.g. 110324104107" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
-                </div>
-                <button type="submit" id="submitBtn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm transition shadow">
-                    Approve Gate Pass (20 Mins)
-                </button>
-            </form>
-            <div id="statusMessage" class="hidden mt-3 p-2.5 rounded-lg text-xs font-medium text-center"></div>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-800">📊 Student Records & Gate Pass Logs</h3>
-                    <p class="text-xs text-slate-500">Live activity showing student details</p>
-                </div>
-                <button onclick="loadPasses()" class="text-xs font-semibold text-indigo-600 hover:underline">🔄 Refresh Table</button>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead>
-                        <tr class="bg-slate-800 text-white uppercase text-[11px]">
-                            <th class="p-3">Roll No</th>
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Dept</th>
-                            <th class="p-3">Year</th>
-                            <th class="p-3">Sec</th>
-                            <th class="p-3">Mobile</th>
-                            <th class="p-3">Address</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3">Approved At</th>
-                            <th class="p-3">Valid Until</th>
-                            <th class="p-3">Exited At</th>
-                        </tr>
-                    </thead>
-                    <tbody id="passesTableBody" class="divide-y divide-slate-100">
-                        <tr>
-                            <td colspan="11" class="p-4 text-center text-slate-400">Loading student records...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+            <tr>
+              <th class="px-5 py-3.5">Roll No</th>
+              <th class="px-5 py-3.5">Name</th>
+              <th class="px-5 py-3.5">Dept</th>
+              <th class="px-5 py-3.5">Approved At</th>
+              <th class="px-5 py-3.5">Status</th>
+              <th class="px-5 py-3.5">Exit Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="liveLogBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="text-center py-6 text-slate-500 font-mono">Loading live records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <script>
-        let allPassesData = [];
+  </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('adminToken')) {
-                document.getElementById('loginModal').classList.add('hidden');
-                checkStudentDatabase();
-                loadPasses();
-            }
+  <footer class="text-center text-[11px] text-slate-600 py-6 relative z-10">
+    <p>GateMatrix Institutional Engine • Developed by <span class="text-emerald-400 font-semibold">Surya</span></p>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splashScreen');
+      if (splash) {
+        setTimeout(() => {
+          splash.style.opacity = '0';
+          splash.style.transform = 'scale(1.05)';
+          splash.style.pointerEvents = 'none';
+          setTimeout(() => { splash.style.display = 'none'; }, 1000);
+        }, 2500);
+      }
+      refreshAll();
+    });
+
+    function refreshAll() {
+      loadStats();
+      loadPrincipalQueue();
+      loadLiveLogs();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/students/count');
+        const data = await res.json();
+        document.getElementById('studentCount').innerText = data.count || 0;
+      } catch (err) {}
+    }
+
+    async function loadPrincipalQueue() {
+      const tbody = document.getElementById('principalTableBody');
+      try {
+        const res = await fetch('/api/passes?status=Pending Principal');
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500">No requests currently awaiting Principal clearance.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-5 py-4 font-mono font-bold text-emerald-400">${p.rollNo}</td>
+            <td class="px-5 py-4 font-semibold text-white">${p.name}</td>
+            <td class="px-5 py-4 text-slate-300 font-mono">${p.dept} ${p.year}-${p.sec}</td>
+            <td class="px-5 py-4 text-slate-300 max-w-xs truncate">${p.reason}</td>
+            <td class="px-5 py-4">
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                ✓ Counselor ➔ Advisor ➔ HOD
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button 
+                onclick="finalApprove('${p._id}')" 
+                class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl text-xs shadow transition active:scale-95 whitespace-nowrap"
+              >
+                Grant Exit Clearance ➔
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-400">Error loading queue.</td></tr>`;
+      }
+    }
+
+    async function loadLiveLogs() {
+      const tbody = document.getElementById('liveLogBody');
+      try {
+        const res = await fetch('/api/passes');
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500">No records found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-5 py-3 font-mono font-bold text-emerald-400">${p.rollNo}</td>
+            <td class="px-5 py-3 font-semibold text-white">${p.name}</td>
+            <td class="px-5 py-3 text-slate-300">${p.dept || '-'}</td>
+            <td class="px-5 py-3 font-mono text-slate-400">${p.approvalTime || '-'}</td>
+            <td class="px-5 py-3">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                p.status === 'Exited' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                p.status === 'Approved' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                p.status === 'Expired' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                'bg-slate-800 text-slate-400'
+              }">${p.status}</span>
+            </td>
+            <td class="px-5 py-3 font-mono text-emerald-400 font-bold">${p.exitTime || '-'}</td>
+          </tr>
+        `).join('');
+      } catch (err) {}
+    }
+
+    async function finalApprove(passId) {
+      try {
+        const res = await fetch('/api/approve/principal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passId })
         });
-
-        // 1. Check if students exist; if 0, automatically show the Upload Modal!
-        async function checkStudentDatabase() {
-            try {
-                const res = await fetch('/api/students/count');
-                const data = await res.json();
-                if (data.count === 0) {
-                    document.getElementById('uploadModal').classList.remove('hidden');
-                }
-            } catch (e) {
-                console.error("Could not check student count", e);
-            }
+        const data = await res.json();
+        if (data.success) {
+          alert('Gate Pass Activated! 20-minute departure timer started.');
+          refreshAll();
+        } else {
+          alert(data.message || 'Approval failed');
         }
+      } catch (err) {
+        alert('Server communication error.');
+      }
+    }
 
-        // Admin Login
-        async function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('adminUser').value.trim();
-            const password = document.getElementById('adminPass').value.trim();
-            const errorDiv = document.getElementById('loginError');
-
-            try {
-                const res = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    sessionStorage.setItem('adminToken', data.token);
-                    document.getElementById('loginModal').classList.add('hidden');
-                    checkStudentDatabase();
-                    loadPasses();
-                } else {
-                    errorDiv.textContent = data.message || "Invalid credentials";
-                    errorDiv.classList.remove('hidden');
-                }
-            } catch (err) {
-                errorDiv.textContent = "Server connection error";
-                errorDiv.classList.remove('hidden');
-            }
-        }
-
-        function handleLogout() {
-            sessionStorage.removeItem('adminToken');
-            location.reload();
-        }
-
-        // Upload Excel from Modal
-        async function uploadModalExcel() {
-            const fileInput = document.getElementById('modalFileInput');
-            const statusMsg = document.getElementById('uploadStatusMsg');
-
-            if (!fileInput.files[0]) {
-                alert("Please select your students.xlsx file first!");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                statusMsg.className = "mt-3 text-xs text-indigo-600 font-semibold block";
-                statusMsg.textContent = "Uploading and syncing students...";
-
-                const res = await fetch('/api/upload-students', { method: 'POST', body: formData });
-                const data = await res.json();
-
-                if (data.success) {
-                    statusMsg.className = "mt-3 text-xs text-emerald-600 font-semibold block";
-                    statusMsg.textContent = `✅ ${data.message}`;
-                    setTimeout(() => {
-                        document.getElementById('uploadModal').classList.add('hidden');
-                    }, 1500);
-                } else {
-                    statusMsg.className = "mt-3 text-xs text-red-600 font-semibold block";
-                    statusMsg.textContent = `❌ ${data.message}`;
-                }
-            } catch (err) {
-                statusMsg.className = "mt-3 text-xs text-red-600 font-semibold block";
-                statusMsg.textContent = "Upload failed: " + err.message;
-            }
-        }
-
-        // Approve Gate Pass
-        async function approvePass(e) {
-            e.preventDefault();
-            const rollNo = document.getElementById('rollNoInput').value.trim();
-            const statusDiv = document.getElementById('statusMessage');
-
-            try {
-                const res = await fetch('/api/approve-pass', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rollNo })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-emerald-100 text-emerald-800";
-                    statusDiv.textContent = `✅ Pass approved for ${data.pass.name} (${rollNo}) - Valid for 20 mins`;
-                    statusDiv.classList.remove('hidden');
-                    document.getElementById('rollNoInput').value = '';
-                    loadPasses();
-                } else {
-                    statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-red-100 text-red-800";
-                    statusDiv.textContent = data.message || "Approval failed";
-                    statusDiv.classList.remove('hidden');
-                }
-            } catch (err) {
-                statusDiv.className = "mt-3 p-2.5 rounded-lg text-xs font-medium text-center bg-red-100 text-red-800";
-                statusDiv.textContent = "Network error";
-                statusDiv.classList.remove('hidden');
-            }
-        }
-
-        // Load Passes Table
-        async function loadPasses() {
-            try {
-                const res = await fetch('/api/passes');
-                allPassesData = await res.json();
-                const tbody = document.getElementById('passesTableBody');
-                
-                if (!allPassesData || allPassesData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-slate-400">No pass records found in database</td></tr>`;
-                    return;
-                }
-
-                const now = new Date().getTime();
-
-                tbody.innerHTML = allPassesData.map(p => {
-                    const expireTime = p.expiresAt ? new Date(p.expiresAt).getTime() : 0;
-                    const diffMinutes = Math.max(0, Math.ceil((expireTime - now) / 60000));
-                    const expiryFormatted = p.expiresAt ? new Date(p.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
-
-                    let statusBadge = "";
-                    if (p.status === 'Exited') {
-                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">✅ Exited</span>`;
-                    } else if (p.status === 'Expired' || (expireTime > 0 && now > expireTime)) {
-                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700">❌ Expired</span>`;
-                    } else {
-                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 animate-pulse">⏳ ${diffMinutes}m left</span>`;
-                    }
-
-                    // Extract Year & Sec smoothly
-                    let yearVal = p.year || '-';
-                    let secVal = p.sec || '-';
-                    if (p.yearSec && (yearVal === '-' || secVal === '-')) {
-                        const parts = p.yearSec.split('/');
-                        yearVal = parts[0] ? parts[0].trim() : yearVal;
-                        secVal = parts[1] ? parts[1].trim() : secVal;
-                    }
-
-                    return `
-                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                            <td class="p-3 font-semibold text-slate-800 font-mono">${p.rollNo}</td>
-                            <td class="p-3 font-medium text-slate-700">${p.name || 'Student'}</td>
-                            <td class="p-3 text-slate-600">${p.dept || 'Engineering'}</td>
-                            <td class="p-3 text-slate-700 font-semibold">${yearVal}</td>
-                            <td class="p-3 text-slate-700 font-semibold">${secVal}</td>
-                            <td class="p-3 text-slate-600 font-mono">${p.mobile || '-'}</td>
-                            <td class="p-3 text-slate-500 truncate max-w-[150px]" title="${p.address || ''}">${p.address || '-'}</td>
-                            <td class="p-3">${statusBadge}</td>
-                            <td class="p-3 text-slate-600 font-mono">${p.approvalTime || '-'}</td>
-                            <td class="p-3 text-amber-700 font-mono font-medium">${expiryFormatted}</td>
-                            <td class="p-3 text-slate-600 font-mono">${p.exitTime || '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error("Failed to load activity", err);
-            }
-        }
-
-        // Download Passes PDF
-        function downloadPDF() {
-            if (!allPassesData || allPassesData.length === 0) {
-                alert("No student records available to download!");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape', 'pt', 'a4');
-
-            doc.setFontSize(18);
-            doc.setTextColor(30, 41, 59);
-            doc.text("College Gate Pass Administration Report", 40, 40);
-
-            doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139);
-          doc.text(`Generated on: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} | Total Records: ${allPassesData.length}`, 40, 58);
-
-            const headers = [["Roll No", "Name", "Dept", "Year", "Sec", "Mobile", "Address", "Status", "Approved At", "Valid Until", "Exit Time"]];
-            const rows = allPassesData.map(p => {
-                let yearVal = p.year || '-';
-                let secVal = p.sec || '-';
-                if (p.yearSec && (yearVal === '-' || secVal === '-')) {
-                    const parts = p.yearSec.split('/');
-                    yearVal = parts[0] ? parts[0].trim() : yearVal;
-                    secVal = parts[1] ? parts[1].trim() : secVal;
-                }
-                return [
-                    p.rollNo || '-',
-                    p.name || 'Student',
-                    p.dept || 'Engineering',
-                    yearVal,
-                    secVal,
-                    p.mobile || '-',
-                    p.address || '-',
-                    p.status || '-',
-                    p.approvalTime || '-',
-            p.expiresAt ? new Date(p.expiresAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-',
-                    p.exitTime || '-'
-                ];
-            });
-
-            doc.autoTable({
-                head: headers,
-                body: rows,
-                startY: 75,
-                theme: 'grid',
-                styles: { fontSize: 8, cellPadding: 5 },
-                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
-                alternateRowStyles: { fillColor: [248, 250, 252] },
-                margin: { left: 40, right: 40 }
-            });
-
-            doc.save(`Gate_Pass_Report_${Date.now()}.pdf`);
-        }
-
-        setInterval(() => {
-            if (sessionStorage.getItem('adminToken')) {
-                loadPasses();
-            }
-        }, 5000);
-        // Smooth fade and zoom transition for the splash screen
-window.addEventListener('load', () => {
-  const splash = document.getElementById('splashScreen');
-  if (splash) {
-    setTimeout(() => {
-      splash.style.opacity = '0';
-      splash.style.transform = 'scale(1.05)';
-      splash.style.pointerEvents = 'none';
-      setTimeout(() => {
-        splash.style.display = 'none';
-      }, 1000);
-    }, 4000);
-  }
-});
-    </script>
+    setInterval(refreshAll, 6000);
+  </script>
 </body>
 </html>
