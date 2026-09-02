@@ -11,14 +11,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-// --- 1. MONGODB ATLAS CONNECTION ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:AdminPass123@cluster0.gpgplkf.mongodb.net/gatepass?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// --- 2. IST TIME HELPER ---
 function getISTTimeString(date = new Date()) {
   return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -32,7 +30,7 @@ function getISTTimeString(date = new Date()) {
   });
 }
 
-// --- 3. FORMAL AI LETTER GENERATOR ---
+// AI Formal Letter Engine
 function generateFormalLetter(student, rawReason) {
   const currentDate = new Date().toLocaleDateString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -49,7 +47,6 @@ From:
 ${student.name}
 Roll Number: ${student.rollNo}
 Department of ${student.dept}, Year & Section: ${student.yearSec || 'III-A'}
-Batch / Roll Range: ${student.batch || 'General Batch'}
 Student Contact: ${student.mobile || '-'} | Parent Contact: ${student.parentContact || '-'}
 
 Through:
@@ -78,7 +75,7 @@ ${student.name}
 (Roll No: ${student.rollNo})`;
 }
 
-// --- 4. DATABASE SCHEMAS ---
+// Schemas
 const UserSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -86,7 +83,6 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, required: true },
   dept: { type: String, default: 'CSE' },
   yearSec: { type: String, default: 'III-A' },
-  batch: { type: String, default: 'Batch 1' },
   createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -96,7 +92,6 @@ const StudentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   dept: { type: String, required: true },
   yearSec: { type: String, default: 'III-A' },
-  batch: { type: String, default: 'Batch 1' },
   counselorName: { type: String, default: 'Class Counselor' },
   mobile: { type: String, default: '-' },
   parentContact: { type: String, required: true },
@@ -110,7 +105,7 @@ const PassSchema = new mongoose.Schema({
   name: String,
   dept: String,
   yearSec: String,
-  batch: String,
+  counselorName: String,
   mobile: String,
   parentContact: String,
   email: String,
@@ -142,10 +137,10 @@ const PassSchema = new mongoose.Schema({
 });
 const Pass = mongoose.model('Pass', PassSchema);
 
-// --- 5. AUTHENTICATION ROUTES ---
+// Auth
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { userId, name, password, role, dept, yearSec, batch } = req.body;
+    const { userId, name, password, role, dept, yearSec } = req.body;
     const cleanId = (userId || '').trim().toLowerCase();
 
     const existing = await User.findOne({ userId: cleanId });
@@ -157,8 +152,7 @@ app.post('/api/auth/register', async (req, res) => {
       password: password.trim(),
       role,
       dept: dept || 'CSE',
-      yearSec: yearSec || 'III-A',
-      batch: batch || 'Batch 1'
+      yearSec: yearSec || 'III-A'
     });
     await newUser.save();
     res.json({ success: true, message: 'Registration successful! You can now log in.' });
@@ -181,11 +175,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- 6. EXCEL ROSTER UPLOAD ---
+// Excel Roster Upload
 app.post('/api/upload-students', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "Please select an Excel file" });
-    const { dept, yearSec, batch, counselorName } = req.body;
+    const { dept, yearSec, counselorName } = req.body;
 
     const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
     const rows = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
@@ -216,7 +210,6 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
           name: nameIdx !== -1 && row[nameIdx] ? String(row[nameIdx]).trim() : 'Student',
           dept: (dept || 'CSE').trim().toUpperCase(),
           yearSec: (yearSec || 'III-A').trim().toUpperCase(),
-          batch: (batch || 'Batch 1').trim(),
           counselorName: counselorName || 'Counselor',
           mobile: mobileIdx !== -1 && row[mobileIdx] ? String(row[mobileIdx]).trim() : '-',
           parentContact: parentIdx !== -1 && row[parentIdx] ? String(row[parentIdx]).trim() : '-',
@@ -227,21 +220,21 @@ app.post('/api/upload-students', upload.single('file'), async (req, res) => {
       );
       count++;
     }
-    res.json({ success: true, message: `Successfully registered ${count} students with full records!`, count });
+    res.json({ success: true, message: `Successfully registered ${count} students for counselor ${counselorName}!`, count });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// --- 7. WORKFLOW APIs ---
+// Passes API (No batch dependency)
 app.get('/api/passes', async (req, res) => {
   try {
-    const { status, dept, rollNo, batch } = req.query;
+    const { status, dept, rollNo, counselorName } = req.query;
     let filter = {};
     if (status) filter.status = status;
     if (dept) filter.dept = dept.toUpperCase();
     if (rollNo) filter.rollNo = rollNo.trim();
-    if (batch) filter.batch = batch.trim();
+    if (counselorName) filter.counselorName = counselorName.trim();
 
     const passes = await Pass.find(filter).sort({ createdAt: -1 });
     res.json(passes);
@@ -250,12 +243,12 @@ app.get('/api/passes', async (req, res) => {
   }
 });
 
-// Student Apply
+// Apply Pass
 app.post('/api/apply-pass', async (req, res) => {
   try {
     const { rollNo, reason } = req.body;
     const student = await Student.findOne({ rollNo: (rollNo || '').trim() });
-    if (!student) return res.status(404).json({ success: false, message: "Roll number not found. Ask your counselor to upload your batch roster." });
+    if (!student) return res.status(404).json({ success: false, message: "Roll number not found. Ask your counselor to upload your roster." });
 
     const generatedLetter = generateFormalLetter(student, reason);
 
@@ -264,7 +257,7 @@ app.post('/api/apply-pass', async (req, res) => {
       name: student.name,
       dept: student.dept,
       yearSec: student.yearSec,
-      batch: student.batch,
+      counselorName: student.counselorName,
       mobile: student.mobile,
       parentContact: student.parentContact,
       email: student.email,
@@ -306,7 +299,7 @@ app.post('/api/approve/counselor', async (req, res) => {
   }
 });
 
-// Class Advisor Approval (with absent counselor fallback)
+// Advisor Approval
 app.post('/api/approve/advisor', async (req, res) => {
   try {
     const { passId, advisorName, parentCalledFallback } = req.body;
@@ -351,7 +344,7 @@ app.post('/api/approve/hod', async (req, res) => {
   }
 });
 
-// Principal Approval (Starts 20-min countdown)
+// Principal Approval
 app.post('/api/approve/principal', async (req, res) => {
   try {
     const pass = await Pass.findById(req.body.passId);
