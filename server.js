@@ -98,6 +98,7 @@ app.get('/apply', (req, res) => res.sendFile(path.join(__dirname, 'apply.html'))
 app.get('/counselor', (req, res) => res.sendFile(path.join(__dirname, 'counselor.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'security.html')));
+app.get('/advisor', (req, res) => res.sendFile(path.join(__dirname, 'advisor.html')));
 
 // --- 5. API ROUTES ---
 
