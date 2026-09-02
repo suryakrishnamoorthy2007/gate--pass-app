@@ -23,7 +23,7 @@
       </div>
       <div>
         <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">GateMatrix</h1>
-        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Autonomous Campus Clearance & Formal Leave Engine</p>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Campus Clearance & Formal Leave Engine</p>
       </div>
     </div>
     <div class="text-right text-xs text-slate-500 font-medium">
@@ -31,7 +31,7 @@
     </div>
   </header>
 
-  <!-- SCREEN 1: 5 CIRCLE PORTALS (Matches Hand Sketch) -->
+  <!-- SCREEN 1: 5 CIRCLE PORTALS -->
   <main id="portalSelectionScreen" class="max-w-4xl w-full mx-auto my-auto py-10">
     <div class="text-center mb-10 space-y-2">
       <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Select Institutional Authority</h2>
@@ -39,7 +39,6 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-3xl mx-auto">
-      <!-- Left Column -->
       <div class="space-y-6 flex flex-col items-center">
         <button onclick="requestUnlock('student', 'Student Portal', '1111')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">👨‍🎓</span>
@@ -50,11 +49,10 @@
         <button onclick="requestUnlock('counselor', 'Counselor Portal', '2222')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-emerald-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">📋</span>
           <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Counselor</span>
-          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Assigned Batch</span>
+          <span class="text-[10px] text-slate-400 font-mono mt-0.5">Parent Verification</span>
         </button>
       </div>
 
-      <!-- Center Hub -->
       <div class="flex flex-col items-center">
         <button onclick="requestUnlock('principal', 'Principal / Admin Office', '5555')" class="group relative flex flex-col items-center justify-center w-48 h-48 rounded-full bg-gradient-to-b from-white to-blue-50/50 border-4 border-blue-600 shadow-xl hover:shadow-2xl hover:scale-105 transition duration-300 active:scale-95">
           <span class="absolute -top-3 bg-blue-600 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow">Executive</span>
@@ -64,7 +62,6 @@
         </button>
       </div>
 
-      <!-- Right Column -->
       <div class="space-y-6 flex flex-col items-center">
         <button onclick="requestUnlock('advisor', 'Class Advisor Portal', '3333')" class="group flex flex-col items-center justify-center w-36 h-36 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-500 shadow-md hover:shadow-xl transition duration-300 active:scale-95">
           <span class="text-3xl mb-1 group-hover:scale-110 transition">🧑‍🏫</span>
@@ -128,11 +125,6 @@
         </div>
       </div>
 
-      <div id="counselorBatchContainer" class="hidden">
-        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Batch / Roll Range</label>
-        <input type="text" id="userBatch" placeholder="e.g. 110324104001 - 110324104020 or Batch 1" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-      </div>
-
       <div>
         <label id="userIdLabel" class="block text-xs font-bold text-slate-600 uppercase mb-1">Student Roll Number</label>
         <input type="text" id="userId" placeholder="Enter Roll Number" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none">
@@ -164,7 +156,6 @@
       </div>
     </div>
 
-    <!-- Role Queues Container -->
     <div id="roleDashboardContent"></div>
 
     <!-- STUDENT PERSONAL STATUS -->
@@ -207,7 +198,7 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Roll No & Student</th>
-              <th class="p-3">Class & Batch</th>
+              <th class="p-3">Class</th>
               <th class="p-3">Contact & Address</th>
               <th class="p-3">Reason & Formal Letter</th>
               <th class="p-3">Parent Verification</th>
@@ -306,9 +297,6 @@
       const showAcademic = !login && (activeRole === 'counselor' || activeRole === 'advisor');
       document.getElementById('academicDetails').classList.toggle('hidden', !showAcademic);
 
-      const showBatch = !login && (activeRole === 'counselor');
-      document.getElementById('counselorBatchContainer').classList.toggle('hidden', !showBatch);
-
       document.getElementById('authSubmitBtn').innerText = login ? `Login as ${activeRole.toUpperCase()}` : `Register as ${activeRole.toUpperCase()}`;
     }
 
@@ -333,12 +321,11 @@
         const name = document.getElementById('userName').value.trim();
         const dept = document.getElementById('userDept')?.value || 'CSE';
         const yearSec = document.getElementById('userYearSec')?.value.trim() || 'III-A';
-        const batch = document.getElementById('userBatch')?.value.trim() || 'Batch 1';
 
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, password, name, role: activeRole, dept, yearSec, batch })
+          body: JSON.stringify({ userId, password, name, role: activeRole, dept, yearSec })
         });
         const data = await res.json();
         alert(data.message);
@@ -386,14 +373,14 @@
             <div class="space-y-6">
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
                 <div>
-                  <h4 class="font-bold text-slate-800 text-sm">📥 Upload Student Master Excel (With Parent Numbers & Full Data)</h4>
-                  <p class="text-xs text-slate-400">Assigned Roster: <span class="font-semibold text-blue-600">${user.batch}</span></p>
+                  <h4 class="font-bold text-slate-800 text-sm">📥 Upload Student Master Excel</h4>
+                  <p class="text-xs text-slate-400">Class: <span class="font-semibold text-blue-600">${user.dept} ${user.yearSec || ''}</span></p>
                 </div>
                 <input type="file" id="counselorFile" accept=".xlsx,.xls,.csv" onchange="uploadCounselorExcel()" class="text-xs">
               </div>
 
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification & Formal Letter Review</h4>
+                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification & Letter Review</h4>
                 <div id="counselorQueue"></div>
               </div>
             </div>
@@ -402,12 +389,8 @@
         } else if (user.role === 'advisor') {
           content.innerHTML = `
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="font-bold text-slate-800 text-sm">Class Advisor Queue</h4>
-                  <p class="text-xs text-slate-400">If Counselor was absent, Class Advisor can directly call parent and forward to HOD</p>
-                </div>
-              </div>
+              <h4 class="font-bold text-slate-800 text-sm">Class Advisor Review Queue</h4>
+              <p class="text-xs text-slate-400">If Counselor was absent, Class Advisor can directly call parent and forward to HOD</p>
               <div id="advisorQueue"></div>
             </div>
           `;
@@ -510,14 +493,22 @@
       } catch (err) {}
     }
 
-    // COUNSELOR QUEUE (Strictly filtered by counselor's batch)
+    // COUNSELOR QUEUE (Shows pending requests for counselor's students)
     async function fetchCounselorQueue() {
-      const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}&batch=${encodeURIComponent(loggedUser.batch)}`);
-      const passes = await res.json();
+      // Matches directly by counselor's name or department
+      const res = await fetch(`/api/passes?status=Pending Counselor&counselorName=${encodeURIComponent(loggedUser.name)}`);
+      let passes = await res.json();
+
+      // If no name match, fallback to department so requests are never hidden
+      if (!passes || passes.length === 0) {
+        const deptRes = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}`);
+        passes = await deptRes.json();
+      }
+
       const el = document.getElementById('counselorQueue');
 
       if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes pending your verification in ${loggedUser.batch}.</div>`;
+        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No student passes currently pending counselor verification.</div>`;
         return;
       }
 
@@ -718,7 +709,7 @@
       `;
     }
 
-    // PRINCIPAL QUEUE (College-Wide: All Departments)
+    // PRINCIPAL QUEUE
     async function fetchPrincipalQueue() {
       const el = document.getElementById('principalQueue');
       if (!el) return;
@@ -753,7 +744,7 @@
                     </td>
                     <td class="p-3 font-mono text-slate-600">
                       <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">${p.dept}</span> 
-                      ${p.yearSec || ''} <span class="text-[11px] text-slate-400">(${p.batch || '-'})</span>
+                      ${p.yearSec || ''}
                     </td>
                     <td class="p-3 max-w-xs">
                       <div class="font-bold text-slate-800 text-[11px] mb-1">"${p.reason}"</div>
@@ -819,7 +810,7 @@
               <span class="text-slate-800 font-sans font-semibold">${p.name}</span>
             </td>
             <td class="p-3 text-slate-500 font-mono">
-              ${p.dept} ${p.yearSec}<br><span class="text-[10px] text-slate-400">${p.batch}</span>
+              ${p.dept} ${p.yearSec || ''}
             </td>
             <td class="p-3 text-[11px] text-slate-600">
               📞 Parent: <b>${p.parentContact || '-'}</b><br>
@@ -909,7 +900,7 @@
         idx + 1,
         p.rollNo,
         p.name,
-        `${p.dept} ${p.yearSec}`,
+        `${p.dept} ${p.yearSec || ''}`,
         p.parentContact || '-',
         p.parentCallVerified ? `✓ ${p.parentCalledBy}` : 'Unverified',
         p.approvalTime || '-',
@@ -930,7 +921,7 @@
       doc.save(`GateMatrix_MasterRoster_${loggedUser.role}_${Date.now()}.pdf`);
     }
 
-    // INDIVIDUAL PASS PDF WITH EMBEDDED FORMAL LETTER
+    // INDIVIDUAL PASS PDF WITH FORMAL LETTER
     function downloadSinglePassPDF(pass) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -959,7 +950,7 @@
         body: [
           ['Roll Number', pass.rollNo || '-'],
           ['Student Name', pass.name || '-'],
-          ['Department & Class', `${pass.dept} ${pass.yearSec || ''} (${pass.batch || 'Batch 1'})`],
+          ['Department & Class', `${pass.dept} ${pass.yearSec || ''}`],
           ['Parent Phone (Verified)', pass.parentContact || '-'],
           ['Student Mobile', pass.mobile || '-'],
           ['Stated Outpass Reason', pass.reason || '-']
@@ -1024,7 +1015,6 @@
       fd.append('file', file);
       fd.append('dept', loggedUser.dept);
       fd.append('yearSec', loggedUser.yearSec);
-      fd.append('batch', loggedUser.batch);
       fd.append('counselorName', loggedUser.name);
 
       const res = await fetch('/api/upload-students', { method: 'POST', body: fd });
