@@ -509,7 +509,7 @@
 
     // COUNSELOR QUEUE
     async function fetchCounselorQueue() {
-      const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}`);
+     const res = await fetch(`/api/passes?status=Pending Counselor&dept=${encodeURIComponent(loggedUser.dept)}&batch=${encodeURIComponent(loggedUser.batch)}`);
       const passes = await res.json();
       const el = document.getElementById('counselorQueue');
 
