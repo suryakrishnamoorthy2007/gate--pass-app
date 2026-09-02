@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- PDF Engine Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -23,7 +22,7 @@
       </div>
       <div>
         <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">GateMatrix</h1>
-        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Autonomous Campus Clearance & Verification Grid</p>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Autonomous Campus Clearance & Formal Leave Engine</p>
       </div>
     </div>
     <div class="text-right text-xs text-slate-500 font-medium">
@@ -58,7 +57,7 @@
           <span class="absolute -top-3 bg-blue-600 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow">Executive</span>
           <span class="text-4xl mb-1 group-hover:scale-110 transition">🏛️</span>
           <span class="text-sm font-extrabold text-slate-900 group-hover:text-blue-600 text-center px-4">Principal / Admin</span>
-          <span class="text-[10px] text-slate-500 font-mono mt-0.5">Final Clearance</span>
+          <span class="text-[10px] text-slate-500 font-mono mt-0.5">College-Wide Final Sign-Off</span>
         </button>
       </div>
 
@@ -147,7 +146,6 @@
   <!-- SCREEN 3: WORKING DASHBOARDS -->
   <div id="dashScreen" class="hidden max-w-7xl w-full mx-auto my-auto space-y-6">
     
-    <!-- Top Action Header -->
     <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
       <div>
         <h3 id="dashGreeting" class="text-base font-bold text-slate-900">Welcome</h3>
@@ -155,7 +153,6 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <!-- Top PDF Button for Authorities -->
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-2">
           <span>📥 Download Entire Records (PDF)</span>
         </button>
@@ -163,13 +160,13 @@
       </div>
     </div>
 
-    <!-- Dynamic Actions / Queues Container -->
+    <!-- Role Queues Container -->
     <div id="roleDashboardContent"></div>
 
-    <!-- STUDENT VIEW: ONLY PERSONAL STATUS & REAL-TIME SIGN-OFF BADGES -->
+    <!-- STUDENT PERSONAL STATUS -->
     <div id="studentPersonalView" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h4 class="font-bold text-slate-900 text-sm">Your Leave / Outpass Applications & Live Sign-Off Status</h4>
+        <h4 class="font-bold text-slate-900 text-sm">Your Leave Applications & Live Sign-Off Status</h4>
         <button onclick="loadStudentPersonalStatus()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">🔄 Refresh</button>
       </div>
       <div class="overflow-x-auto">
@@ -178,24 +175,26 @@
             <tr>
               <th class="p-3">Application Date</th>
               <th class="p-3">Reason</th>
+              <th class="p-3">Formal Letter</th>
               <th class="p-3">Institutional Clearances</th>
               <th class="p-3">Gate Pass Validity</th>
               <th class="p-3">Campus Exit Status</th>
+              <th class="p-3 text-right">PDF</th>
             </tr>
           </thead>
           <tbody id="studentPersonalBody" class="divide-y divide-slate-100">
-            <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading your passes...</td></tr>
+            <tr><td colspan="7" class="p-4 text-center text-slate-400">Loading your passes...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- AUTHORITY VIEW: FULL REPOSITORIES & TIMING COUNTDOWNS -->
+    <!-- AUTHORITY LOGS -->
     <div id="authorityLogsView" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
       <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
         <div>
           <h4 class="font-bold text-slate-900 text-sm">Comprehensive Student Outpass Logs</h4>
-          <p class="text-xs text-slate-400">Complete student data, verified parent contacts, approval chains, and live gate countdowns</p>
+          <p class="text-xs text-slate-400">Complete student data, formal letters, parent verifications, approval chains, and live countdowns</p>
         </div>
         <button onclick="loadUniversalLogs()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">🔄 Refresh</button>
       </div>
@@ -207,17 +206,35 @@
               <th class="p-3">Roll No & Student</th>
               <th class="p-3">Class & Batch</th>
               <th class="p-3">Contact & Address</th>
+              <th class="p-3">Formal Letter</th>
               <th class="p-3">Parent Verification</th>
               <th class="p-3">Approval Chain</th>
-              <th class="p-3">Approved & Valid Time</th>
-              <th class="p-3">Exit Status & Countdown</th>
+              <th class="p-3">Approved & Valid</th>
+              <th class="p-3">Exit Status & Timer</th>
               <th class="p-3 text-right">PDF</th>
             </tr>
           </thead>
           <tbody id="universalLogsBody" class="divide-y divide-slate-100">
-            <tr><td colspan="8" class="p-4 text-center text-slate-400">Loading records...</td></tr>
+            <tr><td colspan="9" class="p-4 text-center text-slate-400">Loading records...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW FORMAL LETTER -->
+  <div id="letterModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📄</span>
+          <h3 class="text-sm font-bold text-slate-900">Institutional Leave Requisition Letter</h3>
+        </div>
+        <button onclick="closeLetterModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      </div>
+      <pre id="letterModalContent" class="whitespace-pre-wrap font-mono text-xs text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-200 leading-relaxed"></pre>
+      <div class="text-right">
+        <button onclick="closeLetterModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow">Done</button>
       </div>
     </div>
   </div>
@@ -330,7 +347,8 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('dashScreen').classList.remove('hidden');
       document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
-     if (user.role === 'principal') {
+
+      if (user.role === 'principal') {
         document.getElementById('dashRoleSubtitle').innerText = `EXECUTIVE CLEARANCE • College-Wide Administration (All Departments)`;
       } else {
         document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} • Dept: ${user.dept || 'Engineering'}`;
@@ -341,7 +359,6 @@
       const authorityView = document.getElementById('authorityLogsView');
       const content = document.getElementById('roleDashboardContent');
 
-      // 1. STUDENT VIEW (Clean, No administrative clutter)
       if (user.role === 'student') {
         topPdfBtn.classList.add('hidden');
         studentView.classList.remove('hidden');
@@ -350,14 +367,13 @@
         content.innerHTML = `
           <div class="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm max-w-lg mx-auto">
             <h4 class="font-bold text-slate-800 text-sm">Apply for Outpass / Leave</h4>
-            <textarea id="passReason" rows="3" placeholder="Reason for leave..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"></textarea>
-            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs">Submit Application</button>
+            <p class="text-xs text-slate-500">State your reason below. The engine will automatically formulate a formal application letter addressed to the Principal.</p>
+            <textarea id="passReason" rows="3" placeholder="State your exact reason for outpass..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"></textarea>
+            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs">Generate Letter & Submit</button>
           </div>
         `;
         loadStudentPersonalStatus();
-      } 
-      // 2. AUTHORITIES (Counselor, Advisor, HOD, Principal)
-      else {
+      } else {
         topPdfBtn.classList.remove('hidden');
         studentView.classList.add('hidden');
         authorityView.classList.remove('hidden');
@@ -374,7 +390,7 @@
               </div>
 
               <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification</h4>
+                <h4 class="font-bold text-slate-800 text-sm">Counselor Queue: Parent Phone Call Verification & Formal Letter Review</h4>
                 <div id="counselorQueue"></div>
               </div>
             </div>
@@ -406,7 +422,7 @@
           content.innerHTML = `
             <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
               <h4 class="font-bold text-slate-800 text-sm">Principal Final Clearance (Activates 20-Min Departure Gate Window)</h4>
-              <p class="text-xs text-slate-400">Full 3-Tier sign-off audit required before activating gate pass</p>
+              <p class="text-xs text-slate-400">Full institutional review across all departments</p>
               <div id="principalQueue"></div>
             </div>
           `;
@@ -419,7 +435,7 @@
 
     async function submitStudentPass(rollNo) {
       const reason = document.getElementById('passReason').value.trim();
-      if (!reason) return alert('Enter reason');
+      if (!reason) return alert('Please enter a reason.');
 
       const res = await fetch('/api/apply-pass', {
         method: 'POST',
@@ -434,7 +450,7 @@
       }
     }
 
-    // STUDENT VIEW: Clean personal clearance table
+    // STUDENT VIEW
     async function loadStudentPersonalStatus() {
       const tbody = document.getElementById('studentPersonalBody');
       if (!tbody || !loggedUser) return;
@@ -444,7 +460,7 @@
         const passes = await res.json();
 
         if (!passes || passes.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">You have no active pass applications.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">You have no active pass applications.</td></tr>`;
           return;
         }
 
@@ -452,6 +468,11 @@
           <tr class="hover:bg-slate-50 transition">
             <td class="p-3 font-mono text-slate-500">${new Date(p.createdAt).toLocaleDateString()}</td>
             <td class="p-3 text-slate-700">${p.reason}</td>
+            <td class="p-3">
+              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter available")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold hover:bg-blue-100">
+                📄 View Letter
+              </button>
+            </td>
             <td class="p-3">
               <div class="flex flex-wrap gap-1">
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.counselorApproval?.approved ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}">
@@ -476,6 +497,11 @@
                 ${p.exitStatus === 'Exited Campus' ? '🚪 EXITED (' + p.exitTime + ')' : '🏫 INSIDE CAMPUS'}
               </span>
             </td>
+            <td class="p-3 text-right">
+              <button onclick='downloadSinglePassPDF(${JSON.stringify(p)})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-bold">
+                PDF
+              </button>
+            </td>
           </tr>
         `).join('');
       } catch (err) {}
@@ -498,7 +524,7 @@
             <tr>
               <th class="p-3">Roll & Name</th>
               <th class="p-3">Parent Phone</th>
-              <th class="p-3">Reason</th>
+              <th class="p-3">Application Letter</th>
               <th class="p-3">Verification Check</th>
               <th class="p-3 text-right">Action</th>
             </tr>
@@ -512,7 +538,11 @@
                     📞 ${p.parentContact}
                   </a>
                 </td>
-                <td class="p-3 text-slate-600 max-w-xs">${p.reason}</td>
+                <td class="p-3">
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+                    📄 View Formal Letter
+                  </button>
+                </td>
                 <td class="p-3">
                   <label class="inline-flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" id="callCheck_${p._id}" class="w-4 h-4 text-blue-600 rounded">
@@ -547,7 +577,7 @@
       loadUniversalLogs();
     }
 
-    // CLASS ADVISOR QUEUE (With Absent-Counselor Parent Call Fallback)
+    // ADVISOR QUEUE
     async function fetchAdvisorQueue() {
       const res = await fetch(`/api/passes?status=Pending Advisor&dept=${encodeURIComponent(loggedUser.dept)}`);
       const passes = await res.json();
@@ -564,6 +594,7 @@
             <tr>
               <th class="p-3">Roll & Name</th>
               <th class="p-3">Parent Contact</th>
+              <th class="p-3">Application Letter</th>
               <th class="p-3">Counselor Verification</th>
               <th class="p-3 text-right">Advisor Action</th>
             </tr>
@@ -576,6 +607,11 @@
                   <a href="tel:${p.parentContact}" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold">
                     📞 ${p.parentContact}
                   </a>
+                </td>
+                <td class="p-3">
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+                    📄 View Letter
+                  </button>
                 </td>
                 <td class="p-3">
                   ${p.parentCallVerified ? `
@@ -624,7 +660,7 @@
       loadUniversalLogs();
     }
 
-    // HOD QUEUE (Shows Counselor + Advisor Prior Sign-Offs)
+    // HOD QUEUE
     async function fetchHODQueue() {
       const res = await fetch(`/api/passes?status=Pending HOD&dept=${encodeURIComponent(loggedUser.dept)}`);
       const passes = await res.json();
@@ -640,8 +676,8 @@
           <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="p-3">Roll & Name</th>
-              <th class="p-3">Reason</th>
-              <th class="p-3">Prior Approvals (Counselor & Advisor)</th>
+              <th class="p-3">Formal Letter</th>
+              <th class="p-3">Prior Approvals</th>
               <th class="p-3 text-right">HOD Action</th>
             </tr>
           </thead>
@@ -649,7 +685,11 @@
             ${passes.map(p => `
               <tr>
                 <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name} (${p.dept} ${p.yearSec})</span></td>
-                <td class="p-3 text-slate-600">${p.reason}</td>
+                <td class="p-3">
+                  <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+                    📄 View Formal Letter
+                  </button>
+                </td>
                 <td class="p-3">
                   <div class="space-y-1">
                     <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
@@ -672,14 +712,12 @@
       `;
     }
 
-    // PRINCIPAL QUEUE (Shows Full 3-Member Sign-off)
-   // PRINCIPAL QUEUE (College-Wide: All Departments & Batches)
+    // PRINCIPAL QUEUE (College-Wide: All Departments)
     async function fetchPrincipalQueue() {
       const el = document.getElementById('principalQueue');
       if (!el) return;
 
       try {
-        // Explicitly fetch without any department restriction
         const res = await fetch('/api/passes?status=Pending%20Principal');
         const passes = await res.json();
 
@@ -695,8 +733,8 @@
                 <tr>
                   <th class="p-3">Roll & Name</th>
                   <th class="p-3">Department & Class</th>
-                  <th class="p-3">Reason</th>
-                  <th class="p-3">Verification Chain (All 3 Approved)</th>
+                  <th class="p-3">Formal Letter</th>
+                  <th class="p-3">Verification Chain</th>
                   <th class="p-3 text-right">Action</th>
                 </tr>
               </thead>
@@ -711,14 +749,18 @@
                       <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">${p.dept}</span> 
                       ${p.yearSec || ''} <span class="text-[11px] text-slate-400">(${p.batch || '-'})</span>
                     </td>
-                    <td class="p-3 text-slate-600 max-w-xs truncate">${p.reason}</td>
+                    <td class="p-3">
+                      <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+                        📄 View Formal Letter
+                      </button>
+                    </td>
                     <td class="p-3">
                       <div class="space-y-1">
                         <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          ✓ Parent Verified: ${p.parentCalledBy || 'Yes'}
+                          ✓ Parent: ${p.parentCalledBy || 'Verified'}
                         </span><br>
                         <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300">
-                          ✓ Advisor & HOD Endorsed
+                          ✓ Advisor & HOD Authorized
                         </span>
                       </div>
                     </td>
@@ -737,6 +779,7 @@
         el.innerHTML = `<div class="p-6 text-center text-xs text-rose-500 font-medium">Error loading queue. Please refresh.</div>`;
       }
     }
+
     async function approveGenericPass(passId, endpoint) {
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -748,7 +791,7 @@
       openDashboard(loggedUser);
     }
 
-    // AUTHORITY COMPLETE LOGS (Shows complete student info, remaining time countdown)
+    // AUTHORITY COMPLETE LOGS
     async function loadUniversalLogs() {
       const tbody = document.getElementById('universalLogsBody');
       if (!tbody) return;
@@ -758,7 +801,7 @@
         masterPassList = await res.json();
 
         if (!masterPassList || masterPassList.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">No pass logs available.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">No pass logs available.</td></tr>`;
           return;
         }
 
@@ -775,6 +818,11 @@
               📞 Parent: <b>${p.parentContact || '-'}</b><br>
               📱 Student: ${p.mobile || '-'}<br>
               🏠 ${p.address || 'Campus Hostel'}
+            </td>
+            <td class="p-3">
+              <button onclick='viewFormalLetter(${JSON.stringify(p.formalLetter || "No letter content")})' class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold">
+                📄 Letter
+              </button>
             </td>
             <td class="p-3">
               <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${p.parentCallVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}">
@@ -807,6 +855,15 @@
       } catch (err) {}
     }
 
+    function viewFormalLetter(letterText) {
+      document.getElementById('letterModalContent').innerText = letterText;
+      document.getElementById('letterModal').classList.remove('hidden');
+    }
+
+    function closeLetterModal() {
+      document.getElementById('letterModal').classList.add('hidden');
+    }
+
     function formatRemainingTime(expiresAt) {
       if (!expiresAt) return 'Pending Clearance';
       const diff = new Date(expiresAt).getTime() - new Date().getTime();
@@ -816,14 +873,13 @@
       return `⏱️ ${m}m ${s}s left`;
     }
 
-    // 1. TOP BULK PDF DOWNLOAD ENGINE (With Download User & Date/Time Watermark)
+    // TOP BULK PDF DOWNLOAD ENGINE
     function downloadMasterPDF() {
       if (!masterPassList || masterPassList.length === 0) return alert('No pass data available to export.');
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-      // Title Banner
       doc.setFillColor(37, 99, 235);
       doc.rect(10, 10, 277, 24, 'F');
 
@@ -836,13 +892,11 @@
       doc.setFont('helvetica', 'normal');
       doc.text("MASTER STUDENT MOVEMENT & PARENT VERIFICATION AUDIT REPORT", 148, 27, { align: "center" });
 
-      // Audit Stamp: WHO downloaded and exact WHEN
       const nowString = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
       doc.setTextColor(51, 65, 85);
       doc.setFontSize(8.5);
       doc.text(`Official Audit Watermark: Document Generated By: ${loggedUser.name} (${loggedUser.role.toUpperCase()}) | Download Date & Time: ${nowString} IST`, 12, 39);
 
-      // Data Rows
       const tableData = masterPassList.map((p, idx) => [
         idx + 1,
         p.rollNo,
@@ -868,61 +922,93 @@
       doc.save(`GateMatrix_MasterRoster_${loggedUser.role}_${Date.now()}.pdf`);
     }
 
-    // 2. INDIVIDUAL PASS PDF SLIP
+    // INDIVIDUAL PASS PDF WITH EMBEDDED FORMAL APPLICATION LETTER
     function downloadSinglePassPDF(pass) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
+      // Outer Border
       doc.setDrawColor(203, 213, 225);
       doc.rect(10, 10, 190, 277);
 
+      // Top Banner
       doc.setFillColor(37, 99, 235);
-      doc.rect(10, 10, 190, 26, 'F');
+      doc.rect(10, 10, 190, 24, 'F');
 
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text("GATEMATRIX OFFICIAL PASS SLIP", 105, 22, { align: "center" });
+      doc.setFontSize(15);
+      doc.text("GATEMATRIX OFFICIAL PASS & LEAVE REQUISITION", 105, 20, { align: "center" });
 
       const downloadAudit = `Downloaded By: ${loggedUser.name} (${loggedUser.role.toUpperCase()}) on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`;
       doc.setFontSize(7.5);
-      doc.text(downloadAudit, 105, 30, { align: "center" });
+      doc.text(downloadAudit, 105, 28, { align: "center" });
 
+      // Student Details
       doc.autoTable({
-        startY: 42,
+        startY: 38,
         margin: { left: 15, right: 15 },
-        head: [['STUDENT INFORMATION', 'RECORD DETAILS']],
+        head: [['STUDENT PROFILE', 'INSTITUTIONAL RECORD']],
         body: [
           ['Roll Number', pass.rollNo || '-'],
           ['Student Name', pass.name || '-'],
           ['Department & Class', `${pass.dept} ${pass.yearSec} (${pass.batch})`],
-          ['Student Phone', pass.mobile || '-'],
-          ['Parent Phone', pass.parentContact || '-'],
-          ['Address', pass.address || 'Hostel / Campus'],
-          ['Outpass Reason', pass.reason || '-']
+          ['Parent Phone (Verified)', pass.parentContact || '-'],
+          ['Student Mobile / Email', `${pass.mobile || '-'} / ${pass.email || '-'}`],
+          ['Residential Address', pass.address || 'Campus Hostel']
         ],
         theme: 'striped',
         headStyles: { fillColor: [30, 41, 59] },
-        styles: { fontSize: 9 }
+        styles: { fontSize: 8.5, cellPadding: 2.5 }
       });
 
+      // Formal Generated Letter Section
+      const letterText = pass.formalLetter || `Subject: Outpass Application\nReason: ${pass.reason}`;
       doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 6,
+        startY: doc.lastAutoTable.finalY + 4,
         margin: { left: 15, right: 15 },
-        head: [['GOVERNANCE TIER', 'AUDIT STATUS & VERIFICATION']],
+        head: [['OFFICIAL REQUISITION LETTER (AUTO-GENERATED VIA GATEMATRIX)']],
+        body: [[letterText]],
+        theme: 'plain',
+        headStyles: { fillColor: [71, 85, 105], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 7.5, cellPadding: 3, font: 'courier' }
+      });
+
+      // Governance Audit Trail
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 4,
+        margin: { left: 15, right: 15 },
+        head: [['CLEARANCE TIER', 'AUDIT STATUS & VERIFICATION']],
         body: [
-          ['Parent Call Verification', pass.parentCallVerified ? `VERIFIED: ${pass.parentCalledBy} (${pass.parentCallTime})` : 'Unverified'],
-          ['Class Advisor Sign-Off', pass.advisorApproval?.approved ? `APPROVED (${pass.advisorApproval?.time})` : 'Pending'],
-          ['HOD Authorization', pass.hodApproval?.approved ? `AUTHORIZED (${pass.hodApproval?.time})` : 'Pending'],
-          ['Principal Final Approval', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime})` : 'Pending'],
-          ['Gate Movement Status', pass.exitStatus === 'Exited Campus' ? `EXITED AT ${pass.exitTime}` : 'INSIDE CAMPUS']
+          ['Tier 1: Parent Call Check', pass.parentCallVerified ? `VERIFIED: ${pass.parentCalledBy} (${pass.parentCallTime})` : 'Unverified'],
+          ['Tier 2: Class Advisor Sign-Off', pass.advisorApproval?.approved ? `APPROVED (${pass.advisorApproval?.time})` : 'Pending'],
+          ['Tier 3: HOD Authorization', pass.hodApproval?.approved ? `AUTHORIZED (${pass.hodApproval?.time})` : 'Pending'],
+          ['Tier 4: Principal Exit Clearance', pass.principalApproval?.approved ? `GRANTED (${pass.approvalTime})` : 'Pending'],
+          ['Physical Gate Exit Status', pass.exitStatus === 'Exited Campus' ? `EXITED AT ${pass.exitTime}` : 'INSIDE CAMPUS']
         ],
         theme: 'grid',
-        headStyles: { fillColor: [51, 65, 85] },
-        styles: { fontSize: 8.5 }
+        headStyles: { fillColor: [30, 41, 59] },
+        styles: { fontSize: 8, cellPadding: 2.5 }
       });
 
-      doc.save(`Pass_${pass.rollNo}.pdf`);
+      // Signature Marks
+      const finalY = doc.lastAutoTable.finalY + 16;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+
+      doc.text("Class Counselor", 25, finalY);
+      doc.text("Class Advisor", 75, finalY);
+      doc.text("HOD", 125, finalY);
+      doc.text("Principal / Gate Security", 160, finalY);
+
+      doc.setDrawColor(148, 163, 184);
+      doc.line(20, finalY - 3, 55, finalY - 3);
+      doc.line(70, finalY - 3, 105, finalY - 3);
+      doc.line(120, finalY - 3, 145, finalY - 3);
+      doc.line(155, finalY - 3, 195, finalY - 3);
+
+      doc.save(`FormalPass_${pass.rollNo}.pdf`);
     }
 
     async function uploadCounselorExcel() {
@@ -947,7 +1033,6 @@
       location.reload();
     }
 
-    // Real-time polling
     setInterval(() => {
       if (loggedUser) {
         if (loggedUser.role === 'student') loadStudentPersonalStatus();
