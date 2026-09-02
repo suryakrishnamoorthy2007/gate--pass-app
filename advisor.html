@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GateMatrix • Advisor & HOD Clearance Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Ambient Glows -->
+  <div class="fixed -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <div class="max-w-6xl w-full mx-auto space-y-6 relative z-10">
+
+    <!-- Header Section -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-400 p-0.5 shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-2xl">
+            🎓
+          </div>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">GateMatrix • Class Advisor & HOD Portal</h1>
+          <p class="text-xs text-purple-400 font-mono">Tier-2 & Tier-3 Academic Governance</p>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="flex items-center gap-3">
+        <select id="roleSelect" onchange="loadPasses()" class="bg-slate-950 border border-purple-500/40 text-xs text-purple-300 font-bold rounded-xl px-4 py-2.5 focus:outline-none">
+          <option value="advisor">Role: Class Advisor</option>
+          <option value="hod">Role: Head of Department (HOD)</option>
+        </select>
+        <button onclick="loadPasses()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-mono transition">
+          🔄 Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Requests Queue -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800">
+        <h2 id="queueTitle" class="text-sm font-bold text-white">Pending Requests for Class Advisor Review</h2>
+        <p id="queueSubtitle" class="text-xs text-slate-400 mt-0.5">Students pre-verified by counselors with parent call confirmation</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+            <tr>
+              <th class="px-5 py-3.5">Roll No</th>
+              <th class="px-5 py-3.5">Student Name</th>
+              <th class="px-5 py-3.5">Class / Batch</th>
+              <th class="px-5 py-3.5">Reason</th>
+              <th class="px-5 py-3.5">Counselor Audit</th>
+              <th class="px-5 py-3.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="advisorTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-500 font-mono">Loading pending passes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-600 py-6 relative z-10">
+    <p>GateMatrix Institutional Engine • Developed by <span class="text-emerald-400 font-semibold">Surya</span></p>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => {
+      loadPasses();
+    });
+
+    async function loadPasses() {
+      const role = document.getElementById('roleSelect').value;
+      const status = role === 'advisor' ? 'Pending Advisor' : 'Pending HOD';
+      const title = document.getElementById('queueTitle');
+      const subtitle = document.getElementById('queueSubtitle');
+      const tbody = document.getElementById('advisorTableBody');
+
+      if (role === 'advisor') {
+        title.innerText = 'Pending Requests for Class Advisor Review';
+        subtitle.innerText = 'Students pre-verified by counselors with parent call confirmation';
+      } else {
+        title.innerText = 'Pending Requests for HOD Authorization';
+        subtitle.innerText = 'Requests reviewed & forwarded by Class Advisors awaiting final departmental sign-off';
+      }
+
+      try {
+        const res = await fetch(`/api/passes?status=${encodeURIComponent(status)}`);
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500">No applications currently pending for this stage.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-5 py-4 font-mono font-bold text-emerald-400">${p.rollNo}</td>
+            <td class="px-5 py-4 font-semibold text-white">${p.name}</td>
+            <td class="px-5 py-4 text-slate-300 font-mono">${p.dept || 'CSE'} ${p.year || 'III'}-${p.sec || 'A'} (${p.batch || '-'})</td>
+            <td class="px-5 py-4 text-slate-300 max-w-xs truncate">${p.reason}</td>
+            <td class="px-5 py-4">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ✓ ${p.counselorApproval?.counselorName || 'Counselor'} (Called Parent)
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button 
+                onclick="processApproval('${p._id}', '${role}')"
+                class="px-4 py-2 ${role === 'advisor' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-purple-600 hover:bg-purple-500'} text-white font-bold rounded-xl text-xs shadow transition active:scale-95 whitespace-nowrap"
+              >
+                ${role === 'advisor' ? 'Approve ➔ HOD' : 'Authorize ➔ Principal'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-400">Error loading passes.</td></tr>`;
+      }
+    }
+
+    async function processApproval(passId, role) {
+      const endpoint = role === 'advisor' ? '/api/approve/advisor' : '/api/approve/hod';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          loadPasses();
+        } else {
+          alert(data.message || 'Error processing approval');
+        }
+      } catch (err) {
+        alert('Server communication error.');
+      }
+    }
+
+    setInterval(loadPasses, 6000);
+  </script>
+</body>
+</html>
