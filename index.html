@@ -330,7 +330,11 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('dashScreen').classList.remove('hidden');
       document.getElementById('dashGreeting').innerText = `Welcome, ${user.name}`;
-      document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} • Dept: ${user.dept || 'Engineering'}`;
+     if (user.role === 'principal') {
+        document.getElementById('dashRoleSubtitle').innerText = `EXECUTIVE CLEARANCE • College-Wide Administration (All Departments)`;
+      } else {
+        document.getElementById('dashRoleSubtitle').innerText = `${user.role.toUpperCase()} • Dept: ${user.dept || 'Engineering'}`;
+      }
 
       const topPdfBtn = document.getElementById('topBulkPdfBtn');
       const studentView = document.getElementById('studentPersonalView');
@@ -669,48 +673,70 @@
     }
 
     // PRINCIPAL QUEUE (Shows Full 3-Member Sign-off)
+   // PRINCIPAL QUEUE (College-Wide: All Departments & Batches)
     async function fetchPrincipalQueue() {
-      const res = await fetch(`/api/passes?status=Pending Principal`);
-      const passes = await res.json();
       const el = document.getElementById('principalQueue');
+      if (!el) return;
 
-      if (!passes || passes.length === 0) {
-        el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No requests pending Principal clearance.</div>`;
-        return;
+      try {
+        // Explicitly fetch without any department restriction
+        const res = await fetch('/api/passes?status=Pending%20Principal');
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          el.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 font-medium">No requests currently pending Principal clearance across any department.</div>`;
+          return;
+        }
+
+        el.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Roll & Name</th>
+                  <th class="p-3">Department & Class</th>
+                  <th class="p-3">Reason</th>
+                  <th class="p-3">Verification Chain (All 3 Approved)</th>
+                  <th class="p-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${passes.map(p => `
+                  <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-blue-600">${p.rollNo}</span><br>
+                      <span class="text-slate-800 font-sans font-semibold">${p.name}</span>
+                    </td>
+                    <td class="p-3 font-mono text-slate-600">
+                      <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">${p.dept}</span> 
+                      ${p.yearSec || ''} <span class="text-[11px] text-slate-400">(${p.batch || '-'})</span>
+                    </td>
+                    <td class="p-3 text-slate-600 max-w-xs truncate">${p.reason}</td>
+                    <td class="p-3">
+                      <div class="space-y-1">
+                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          ✓ Parent Verified: ${p.parentCalledBy || 'Yes'}
+                        </span><br>
+                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                          ✓ Advisor & HOD Endorsed
+                        </span>
+                      </div>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="approveGenericPass('${p._id}', '/api/approve/principal')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition active:scale-95 whitespace-nowrap text-xs">
+                        Grant 20-Min Gate Pass ➔
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } catch (err) {
+        el.innerHTML = `<div class="p-6 text-center text-xs text-rose-500 font-medium">Error loading queue. Please refresh.</div>`;
       }
-
-      el.innerHTML = `
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-            <tr>
-              <th class="p-3">Roll & Name</th>
-              <th class="p-3">Dept & Class</th>
-              <th class="p-3">Verification Chain (All 3 Approved)</th>
-              <th class="p-3 text-right">Final Clearance</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            ${passes.map(p => `
-              <tr>
-                <td class="p-3 font-mono"><b>${p.rollNo}</b><br><span class="text-slate-600 font-sans">${p.name}</span></td>
-                <td class="p-3 text-slate-600 font-mono">${p.dept} ${p.yearSec} (${p.batch})</td>
-                <td class="p-3">
-                  <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    ✓ Counselor (Called Parent) ➔ ✓ Advisor ➔ ✓ HOD
-                  </span>
-                </td>
-                <td class="p-3 text-right">
-                  <button onclick="approveGenericPass('${p._id}', '/api/approve/principal')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm">
-                    Grant 20-Min Gate Pass ➔
-                  </button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
     }
-
     async function approveGenericPass(passId, endpoint) {
       const res = await fetch(endpoint, {
         method: 'POST',
